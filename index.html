@@ -640,38 +640,59 @@ const LEVELS = [
   },
 
   // LEVEL 3 - REVELATION (THE ORIGINAL)
-  // Triple airlock: Plate 1 (160, 546) links to BOTH Door 1 and Door 3!
-  // Plate 2 (320, 356) links to Door 2!
+  // THE MASTER REVERSAL PUZZLE:
+  // Player spawns on the High Origin Ledge (y=280) where Plate 1 sits.
+  // The player drops down across the Void Chasm via floating cyber pillars:
+  //   - High Origin Ledge: (0, 280, w=220, h=360) -> Plate 1 at (140, 276) [Opens Door 3]
+  //   - Pillar 1: (260, 380, w=85, h=260) -> Stepping stone across the chasm
+  //   - Pillar 2: (385, 320, w=85, h=320) -> Plate 2 at (425, 316) [Opens Door 1]
+  //   - Low Bridge: (510, 440, w=75, h=20) -> Plate 3 at (545, 436) [Opens Door 2]
+  //   - Airlock Ground Floor: (610, 550, w=350, h=90) -> Leads to Triple Security Vault
+  //   - Overhead Bulkhead: (640, 0, w=220, h=430) -> Forms sealed airlocks
+  //
+  // Why Reverse Flip [F] is STRICTLY MANDATORY:
+  // Every drop (Ledge -> Pillar 1 -> Pillar 2 -> Bridge -> Floor) is a one-way descent (>100px).
+  // Once the player drops to the Airlock Floor at Door 1 (y=550), they can NEVER jump back up to the High Origin Ledge (y=280).
+  // Door 1 requires Plate 2 (on Pillar 2).
+  // Door 2 requires Plate 3 (on Low Bridge).
+  // Door 3 requires Plate 1 (back on High Origin Ledge).
+  // In forward replay, the shadow drops down to Door 1 and is stuck at the bottom; Plate 1 has long expired.
+  // Pressing [F] (Shadow Flip) REVERSES time: the shadow retraces its trajectory backwards across the void,
+  // ascending the one-way drops in reverse gravity, back onto the High Origin Ledge to press Plate 1.
+  // This opens Door 3, allowing the player to escape into the Extraction Portal!
   {
     name: 'LEVEL 3 - REVELATION',
     phase: 'THE ORIGINAL',
-    subtitle: 'IDENTITY ERROR: YOU ARE THE ECHO.',
-    spawn: { x: 70, y: 520 },
+    subtitle: 'REVERSE FLIP MANDATORY // TEMPORAL DESCENT',
+    spawn: { x: 70, y: 264 },
     solids: [
-      { x: 0, y: 550, w: 960, h: 90, color: '#0a121e', border: '#00f0ff' },
-      { x: 450, y: 0, w: 20, h: 470, color: '#0d1829', border: '#00f0ff' },
-      { x: 670, y: 0, w: 20, h: 470, color: '#0d1829', border: '#00f0ff' },
-      { x: 810, y: 0, w: 20, h: 470, color: '#0d1829', border: '#00f0ff' },
-      { x: 130, y: 450, w: 100, h: 14, color: '#101c2e', border: '#00f0ff' },
-      { x: 265, y: 360, w: 110, h: 14, color: '#101c2e', border: '#00f0ff' }
+      { x: 0, y: 280, w: 220, h: 360, color: '#0c1626', border: '#00f0ff' },
+      { x: 260, y: 380, w: 85, h: 260, color: '#0c1626', border: '#00f0ff' },
+      { x: 385, y: 320, w: 85, h: 320, color: '#0c1626', border: '#00f0ff' },
+      { x: 510, y: 440, w: 75, h: 20, color: '#101c2e', border: '#00f0ff' },
+      { x: 610, y: 550, w: 350, h: 90, color: '#0a121e', border: '#00f0ff' },
+      { x: 640, y: 0, w: 220, h: 430, color: '#0d1829', border: '#00f0ff' }
     ],
     plates: [
-      { id: 'p1', x: 160, y: 546, w: 48, h: 12, doors: ['d1', 'd3'], releaseDelay: 0.5 },
-      { id: 'p2', x: 320, y: 356, w: 48, h: 12, doors: ['d2'], releaseDelay: 0.5 }
+      { id: 'p1', x: 140, y: 276, w: 48, h: 12, doors: ['d3'], releaseDelay: 2.0 },
+      { id: 'p2', x: 425, y: 316, w: 48, h: 12, doors: ['d1'], releaseDelay: 1.2 },
+      { id: 'p3', x: 545, y: 436, w: 48, h: 12, doors: ['d2'], releaseDelay: 1.2 }
     ],
     doors: [
-      { id: 'd1', x: 460, y: 510, w: 16, h: 80 },
-      { id: 'd2', x: 680, y: 510, w: 16, h: 80 },
-      { id: 'd3', x: 820, y: 510, w: 16, h: 80 }
+      { id: 'd1', x: 650, y: 490, w: 18, h: 120 },
+      { id: 'd2', x: 750, y: 490, w: 18, h: 120 },
+      { id: 'd3', x: 840, y: 490, w: 18, h: 120 }
     ],
     terminal: {
-      x: 750, y: 535,
-      title: 'ARCHIVE 03: CLASSIFIED TRUTH',
-      text: 'ARCHIVE 03: SYSTEM RESET PURGED THE MASTER RECORD.\n' +
-            'THE BLUE FORM IS AN EMISSION. YOU ARE THE ECHO.\n' +
-            'THE RED SHADOW WAS YOU.'
+      x: 700, y: 535,
+      title: 'ARCHIVE 03: CLASSIFIED BIOMETRIC AUDIT',
+      text: 'CRITICAL ALERT: 0.00% BIOLOGICAL RESIDUE DETECTED.\n' +
+            'IDENTITY AUDIT: YOU ARE NOT THE ORIGINAL ESCAPEE.\n' +
+            'YOU ARE A TIME-PROJECTED BLUE ECHO SENT FORWARD INTO THE FUTURE.\n' +
+            'THE RED SHADOW WAS THE ORIGINAL ENTITY, PRESERVED AFTER SYSTEM RESET.\n' +
+            'REVERSE TIME WITH [F] TO SHATTER THE RECURSIVE CONTAINMENT CYCLE.'
     },
-    exit: { x: 900, y: 510 }
+    exit: { x: 900, y: 505 }
   }
 ];
 

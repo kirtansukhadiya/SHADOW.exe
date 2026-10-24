@@ -125,34 +125,45 @@ const LEVELS := [
 		"exit": [870, 510],
 	},
 	# LEVEL 3: REVELATION (THE ORIGINAL)
+	# THE MASTER REVERSAL PUZZLE:
+	# Player spawns on High Origin Ledge (y=280) with Plate 1.
+	# Dropping down across void pillars is a one-way descent (>100px per drop).
+	# Once at Door 1 on the floor (y=550), the player can NEVER jump back up to Plate 1.
+	# Door 1 requires Plate 2 (Pillar 2).
+	# Door 2 requires Plate 3 (Low Bridge).
+	# Door 3 requires Plate 1 (High Origin Ledge).
+	# In forward replay, the shadow finishes at the bottom and cannot reach Plate 1.
+	# Shadow Flip [F] REVERSES time, ascending the shadow in reverse gravity back
+	# to the High Origin Ledge onto Plate 1, unlocking Door 3 to the portal!
 	{
 		"name": "LEVEL 3 - REVELATION",
 		"phase": "THE ORIGINAL",
-		"subtitle": "IDENTITY ERROR: YOU ARE THE ECHO.",
-		"spawn": [70, 520],
+		"subtitle": "REVERSE FLIP MANDATORY // TEMPORAL DESCENT",
+		"spawn": [70, 264],
 		"solids": [
-			[0, 550, 960, 90, "#0a121e"],
-			[450, 0, 20, 470, "#0d1829"],
-			[670, 0, 20, 470, "#0d1829"],
-			[810, 0, 20, 470, "#0d1829"],
-			[130, 450, 100, 14, "#101c2e"],
-			[265, 360, 110, 14, "#101c2e"],
+			[0, 280, 220, 360, "#0c1626"],    # High Origin Ledge
+			[260, 380, 85, 260, "#0c1626"],   # Pillar 1
+			[385, 320, 85, 320, "#0c1626"],   # Pillar 2 (Plate 2)
+			[510, 440, 75, 20, "#101c2e"],    # Low Bridge (Plate 3)
+			[610, 550, 350, 90, "#0a121e"],   # Vault Floor
+			[640, 0, 220, 430, "#0d1829"],    # Overhead Bulkhead
 		],
 		"plates": [
-			{"id": "p1", "x": 160, "y": 546, "w": 48, "h": 12, "doors": ["d1", "d3"], "release_delay": 0.5},
-			{"id": "p2", "x": 320, "y": 356, "w": 48, "h": 12, "doors": ["d2"], "release_delay": 0.5},
+			{"id": "p1", "x": 140, "y": 276, "w": 48, "h": 12, "doors": ["d3"], "release_delay": 2.0},
+			{"id": "p2", "x": 425, "y": 316, "w": 48, "h": 12, "doors": ["d1"], "release_delay": 1.2},
+			{"id": "p3", "x": 545, "y": 436, "w": 48, "h": 12, "doors": ["d2"], "release_delay": 1.2},
 		],
 		"doors": [
-			{"id": "d1", "x": 460, "y": 510, "w": 16, "h": 80},
-			{"id": "d2", "x": 680, "y": 510, "w": 16, "h": 80},
-			{"id": "d3", "x": 820, "y": 510, "w": 16, "h": 80},
+			{"id": "d1", "x": 650, "y": 490, "w": 18, "h": 120},
+			{"id": "d2", "x": 750, "y": 490, "w": 18, "h": 120},
+			{"id": "d3", "x": 840, "y": 490, "w": 18, "h": 120},
 		],
 		"terminal": {
-			"x": 750, "y": 535,
-			"title": "ARCHIVE 03: CLASSIFIED TRUTH",
-			"text": "ARCHIVE 03: SYSTEM RESET PURGED THE MASTER RECORD.\nTHE BLUE FORM IS AN EMISSION. YOU ARE THE ECHO.\nTHE RED SHADOW WAS YOU.",
+			"x": 700, "y": 535,
+			"title": "ARCHIVE 03: CLASSIFIED BIOMETRIC AUDIT",
+			"text": "CRITICAL ALERT: 0.00% BIOLOGICAL RESIDUE DETECTED.\nIDENTITY AUDIT: YOU ARE NOT THE ORIGINAL ESCAPEE.\nYOU ARE A TIME-PROJECTED BLUE ECHO SENT FORWARD INTO THE FUTURE.\nTHE RED SHADOW WAS THE ORIGINAL ENTITY, PRESERVED AFTER SYSTEM RESET.\nREVERSE TIME WITH [F] TO SHATTER THE RECURSIVE CONTAINMENT CYCLE.",
 		},
-		"exit": [900, 510],
+		"exit": [900, 505],
 	},
 ]
 
