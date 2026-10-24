@@ -12,9 +12,9 @@ const WebAudio := preload("res://scripts/web_audio.gd")
 # The combined spritesheet.png is misaligned and clips the characters, so the
 # individual 64x64 frames are used instead.
 const FRAME_SETS := ["player", "ghost", "ghost_reverse"]
-# The 64px frames have transparent padding; scale up so the character fills
-# the same area the 32px spritesheet cell was meant to.
-const FRAME_PAD_SCALE := 1.4
+# Each 64px frame is drawn into the same box as the web build's 32px cell
+# (32px in levels, 48px on title cards), keeping the small web-sized character.
+const FRAME_PAD_SCALE := 1.0
 
 # --- GAME CONSTANTS (same as web) ---
 const CANVAS_W := 960.0
