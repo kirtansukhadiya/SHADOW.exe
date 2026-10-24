@@ -32,127 +32,48 @@ const HIT_HW_FLOOR := 6.0
 
 enum State { MENU, PLAYING, VICTORY }
 
-# Level definitions copied from the web build.
+# Level definitions. Every level must REQUIRE the Shadow Flip (theme: REVERSE).
+# (Tutorial and phases 2-3 were removed while levels are being rebuilt;
+# they are in git history before this change.)
 const LEVELS := [
-	# LEVEL 0: TUTORIAL PROTOCOL
-	{
-		"name": "TUTORIAL PROTOCOL",
-		"phase": "CALIBRATION",
-		"subtitle": "SHADOW CLONE & REVERSAL REHEARSAL",
-		"spawn": [80, 520],
-		"solids": [
-			[0, 550, 960, 90, "#0a121e"],
-			[218, 520, 24, 30, "#142236"],
-			[325, 440, 110, 14, "#101c2e"],
-			[510, 0, 20, 470, "#0e1828"],
-			[690, 0, 20, 470, "#0e1828"],
-		],
-		"plates": [
-			{"id": "p1", "x": 380, "y": 436, "w": 48, "h": 12, "doors": ["d1"], "release_delay": 0.5},
-			{"id": "p2", "x": 300, "y": 546, "w": 48, "h": 12, "doors": ["d2"], "release_delay": 0.5},
-		],
-		"doors": [
-			{"id": "d1", "x": 520, "y": 510, "w": 16, "h": 80},
-			{"id": "d2", "x": 700, "y": 510, "w": 16, "h": 80},
-		],
-		"terminal": {
-			"x": 150, "y": 535,
-			"title": "TUTORIAL PROTOCOL LOG",
-			"text": "1. Walk [A/D] and Jump [W] onto the raised platform to touch Plate 1.\n2. Return to the lower floor. Press [SPACE] to deploy your Shadow clone!\n3. While your shadow steps on Plate 1, pass Door 1, then press [F] to REVERSE your shadow back onto Plate 2!",
-		},
-		"exit": [850, 510],
-	},
-	# LEVEL 1: PHASE 1 - DISCOVERY (THE ECHO)
+	# PHASE 1 - DISCOVERY (THE ECHO)
+	# Why reversal is mandatory:
+	#  - Door 1 needs Plate B, Door 2 needs Plate A, and the doors come in that
+	#    order (B first, then A).
+	#  - Plate A is on the spawn ledge; the drop to the lower floor (180px) is
+	#    higher than a jump (~133px), so any recording visits A before B.
+	#  - A forward replay presses A then B (wrong order) and parks at the
+	#    deploy point, which can't be Plate A (the path must continue to B).
+	#  - Flipping walks the echo back over B (Door 1) and then up to A (Door 2).
 	{
 		"name": "PHASE 1 - DISCOVERY",
 		"phase": "THE ECHO",
-		"subtitle": "ECHO DETECTED. REVERSE SYNCHRONIZATION ACTIVE.",
-		"spawn": [70, 520],
+		"subtitle": "ECHO DETECTED. ITS ORDER IS WRONG. REVERSE IT.",
+		"spawn": [50, 353],
 		"solids": [
-			[0, 550, 180, 90, "#0a121e"],
-			[540, 550, 420, 90, "#0a121e"],
-			[550, 0, 200, 430, "#0d1829"],
-			[205, 480, 90, 160, "#0c1626"],
-			[315, 400, 110, 240, "#0c1626"],
-			[450, 480, 80, 160, "#0c1626"],
+			[0, 370, 300, 270, "#0c1626"],    # Spawn ledge (180px above the floor: one-way drop)
+			[300, 550, 660, 90, "#0a121e"],   # Lower floor
+			[590, 0, 220, 430, "#0d1829"],    # Airlock roof over Doors 1 & 2
 		],
 		"plates": [
-			{"id": "p1", "x": 370, "y": 396, "w": 48, "h": 12, "doors": ["d1"], "release_delay": 0.5},
-			{"id": "p2", "x": 110, "y": 546, "w": 48, "h": 12, "doors": ["d2"], "release_delay": 0.5},
+			{"id": "pA", "x": 210, "y": 366, "w": 48, "h": 12, "doors": ["d2"], "release_delay": 0.5},  # Plate A (ledge)
+			{"id": "pB", "x": 430, "y": 546, "w": 48, "h": 12, "doors": ["d1"], "release_delay": 0.5},  # Plate B (floor)
 		],
 		"doors": [
-			{"id": "d1", "x": 560, "y": 490, "w": 18, "h": 120},
-			{"id": "d2", "x": 740, "y": 490, "w": 18, "h": 120},
+			{"id": "d1", "x": 600, "y": 490, "w": 18, "h": 120},
+			{"id": "d2", "x": 800, "y": 490, "w": 18, "h": 120},
 		],
 		"terminal": {
-			"x": 150, "y": 535,
+			"x": 120, "y": 355,
 			"title": "ARCHIVE 01: SYSTEM AWAKENING",
-			"text": "ARCHIVE 01: SUBJECT AWAKENED IN CORRUPTED SECTOR 1.\nFALLING INTO THE VOID WILL RESTART YOUR SEQUENCE.\nCOOPERATE WITH YOUR PAST: DEPLOY [SPACE] FOR DOOR 1, THEN FLIP [F] FOR DOOR 2!",
+			"text": "ARCHIVE 01: SUBJECT AWAKENED IN CORRUPTED SECTOR 1.\nTHE LEDGE BELOW IS ONE-WAY. YOUR ECHO REPLAYS YOUR STEPS IN THE ORDER YOU TOOK THEM.\nTHE AIRLOCK DEMANDS THE OPPOSITE ORDER. DEPLOY [SPACE], THEN REVERSE TIME [F].",
 		},
-		"exit": [850, 500],
-	},
-	# LEVEL 2: PHASE 2 - DOUBT (THE OPPOSITE)
-	{
-		"name": "PHASE 2 - DOUBT",
-		"phase": "THE OPPOSITE",
-		"subtitle": "WARNING: ORIGINAL SIGNAL NOT FOUND.",
-		"spawn": [70, 520],
-		"solids": [
-			[0, 550, 960, 90, "#0a121e"],
-			[540, 0, 210, 470, "#0d1829"],
-			[130, 450, 100, 14, "#101c2e"],
-			[260, 350, 100, 14, "#101c2e"],
-			[390, 260, 100, 14, "#101c2e"],
-		],
-		"plates": [
-			{"id": "p1", "x": 440, "y": 256, "w": 48, "h": 12, "doors": ["d1"], "release_delay": 0.5},
-			{"id": "p2", "x": 150, "y": 546, "w": 48, "h": 12, "doors": ["d2"], "release_delay": 0.5},
-		],
-		"doors": [
-			{"id": "d1", "x": 550, "y": 510, "w": 16, "h": 80},
-			{"id": "d2", "x": 740, "y": 510, "w": 16, "h": 80},
-		],
-		"terminal": {
-			"x": 620, "y": 535,
-			"title": "ARCHIVE 02: SIGNAL ANOMALY",
-			"text": "ARCHIVE 02: WARNING: THE SIGNAL YOU ARE TRACING DOES NOT ORIGINATE FROM YOU.\nWHO IS THE ARCHIVE, AND WHO IS THE PROGRAM?",
-		},
-		"exit": [870, 510],
-	},
-	# LEVEL 3: PHASE 3 - REVELATION (THE ORIGINAL)
-	{
-		"name": "PHASE 3 - REVELATION",
-		"phase": "THE ORIGINAL",
-		"subtitle": "IDENTITY ERROR: YOU ARE THE ECHO.",
-		"spawn": [70, 520],
-		"solids": [
-			[0, 550, 960, 90, "#0a121e"],
-			[450, 0, 20, 470, "#0d1829"],
-			[670, 0, 20, 470, "#0d1829"],
-			[810, 0, 20, 470, "#0d1829"],
-			[130, 450, 100, 14, "#101c2e"],
-			[265, 360, 110, 14, "#101c2e"],
-		],
-		"plates": [
-			{"id": "p1", "x": 160, "y": 546, "w": 48, "h": 12, "doors": ["d1", "d3"], "release_delay": 0.5},
-			{"id": "p2", "x": 320, "y": 356, "w": 48, "h": 12, "doors": ["d2"], "release_delay": 0.5},
-		],
-		"doors": [
-			{"id": "d1", "x": 460, "y": 510, "w": 16, "h": 80},
-			{"id": "d2", "x": 680, "y": 510, "w": 16, "h": 80},
-			{"id": "d3", "x": 820, "y": 510, "w": 16, "h": 80},
-		],
-		"terminal": {
-			"x": 750, "y": 535,
-			"title": "ARCHIVE 03: CLASSIFIED TRUTH",
-			"text": "ARCHIVE 03: SYSTEM RESET PURGED THE MASTER RECORD.\nTHE BLUE FORM IS AN EMISSION. YOU ARE THE ECHO.\nTHE RED SHADOW WAS YOU.",
-		},
-		"exit": [900, 510],
+		"exit": [890, 500],
 	},
 ]
 
 const MANUAL_TITLE := "SHADOW.exe MANUAL // REVERSAL PROTOCOL"
-const MANUAL_TEXT := "MISSION DIRECTIVE:\n1. [W] or [UP] to JUMP. Space is strictly for Shadow clone deployment.\n2. Walk across pressure plates to open security blast doors.\n3. Press [SPACE] to deploy your Shadow clone, which replays your past steps.\n4. Press [F] for SHADOW FLIP: time-reverses the clone's trajectory, sending it backward to unlock the second airlock door!\n5. Reaching the Extraction Portal triggers sector advance."
+const MANUAL_TEXT := "MISSION DIRECTIVE:\n1. [W] or [UP] to JUMP. Space is strictly for Shadow clone deployment.\n2. Walk across pressure plates to open security blast doors.\n3. Press [SPACE] to deploy your Shadow clone, which replays your past steps.\n4. Press [F] for SHADOW FLIP: time-reverses the clone, so it revisits your steps in the opposite order. Every sector requires it.\n5. Reaching the Extraction Portal triggers sector advance."
 
 # --- GLOBAL STATE ---
 var game_state: State = State.MENU
@@ -204,7 +125,7 @@ func _ready() -> void:
 	add_child(_audio)
 	_build_page()
 	# Initialize (web: loadLevel(1); gameState = MENU)
-	load_level(1)
+	load_level(0)
 	game_state = State.MENU
 
 
@@ -273,7 +194,7 @@ func _build_top_nav() -> Control:
 	var controls := HBoxContainer.new()
 	controls.add_theme_constant_override("separation", 8)
 	row.add_child(controls)
-	for spec in [["TITLE MENU", _on_nav_menu], ["TUTORIAL", _on_nav_tutorial], ["RESET [R]", _on_nav_restart],
+	for spec in [["TITLE MENU", _on_nav_menu], ["RESET [R]", _on_nav_restart],
 			["SOUND: ON", _on_nav_sound], ["FULLSCREEN", _on_nav_fullscreen]]:
 		var b := Button.new()
 		b.text = spec[0]
@@ -870,8 +791,7 @@ func _draw_menu(time: float) -> void:
 
 	_text("PRESS [SPACE] OR CLICK BELOW TO INITIALIZE", CANVAS_W / 2.0, 430, UI.orbitron(600), 18, Color.WHITE, 1)
 	_draw_menu_button(CANVAS_W / 2.0 - 160, 460, 320, 44, "▶ START CAMPAIGN (PHASE 1)", UI.CYAN)
-	_draw_menu_button(CANVAS_W / 2.0 - 160, 515, 320, 38, "📖 TUTORIAL PROTOCOL", UI.ORANGE)
-	_draw_menu_button(CANVAS_W / 2.0 - 160, 565, 320, 38, "⚡ STORY ARCHIVES & MANUAL", UI.TEXT_MUTED)
+	_draw_menu_button(CANVAS_W / 2.0 - 160, 515, 320, 38, "⚡ STORY ARCHIVES & MANUAL", UI.TEXT_MUTED)
 
 
 func _draw_card(x: float, y: float, w: float, h: float, color: Color, tag: String, title: String, row: int, time: float) -> void:
@@ -917,7 +837,7 @@ func _input(event: InputEvent) -> void:
 		if game_state == State.MENU:
 			if code == KEY_SPACE or code == KEY_ENTER:
 				game_state = State.PLAYING
-				load_level(1)
+				load_level(0)
 			return
 		if game_state == State.VICTORY:
 			if code in [KEY_SPACE, KEY_ENTER, KEY_ESCAPE]:
@@ -953,11 +873,8 @@ func _on_canvas_input(event: InputEvent) -> void:
 	if game_state == State.MENU:
 		if in_x and p.y >= 460 and p.y <= 504:
 			game_state = State.PLAYING
-			load_level(1)
-		elif in_x and p.y >= 515 and p.y <= 553:
-			game_state = State.PLAYING
 			load_level(0)
-		elif in_x and p.y >= 565 and p.y <= 603:
+		elif in_x and p.y >= 515 and p.y <= 553:
 			_modal.open(MANUAL_TITLE, MANUAL_TEXT)
 	elif game_state == State.VICTORY:
 		if p.x >= CANVAS_W / 2.0 - 140 and p.x <= CANVAS_W / 2.0 + 140 and p.y >= 460 and p.y <= 508:
@@ -966,11 +883,6 @@ func _on_canvas_input(event: InputEvent) -> void:
 
 func _on_nav_menu() -> void:
 	game_state = State.MENU
-
-
-func _on_nav_tutorial() -> void:
-	game_state = State.PLAYING
-	load_level(0)
 
 
 func _on_nav_restart() -> void:
