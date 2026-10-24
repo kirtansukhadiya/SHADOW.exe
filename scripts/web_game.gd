@@ -97,32 +97,42 @@ const LEVELS := [
 		"exit": [890, 500],
 	},
 	# LEVEL 2: DOUBT (THE OPPOSITE)
+	# Why reversal is mandatory:
+	#  - Three one-way drops (150px each, jump ~133px): spawn ledge (Plate A),
+	#    middle step (Plate B), floor (Plate C). Any recording touches A, B, C
+	#    in that order.
+	#  - The airlock doors need the opposite order: Door 1 <- C, Door 2 <- B,
+	#    Door 3 <- A. A forward echo presses A, B, C; only a flipped echo
+	#    replays C, B, A.
+	#  - Plate C is ~160px from Door 1, too far to hold it yourself and get
+	#    through before the door shuts (0.5s release + close).
 	{
 		"name": "LEVEL 2 - DOUBT",
 		"phase": "THE OPPOSITE",
-		"subtitle": "WARNING: ORIGINAL SIGNAL NOT FOUND.",
-		"spawn": [70, 520],
+		"subtitle": "THREE SEALS. THEY OPEN IN THE OPPOSITE ORDER.",
+		"spawn": [110, 233],
 		"solids": [
-			[0, 550, 960, 90, "#0a121e"],
-			[540, 0, 210, 470, "#0d1829"],
-			[130, 450, 100, 14, "#101c2e"],
-			[260, 350, 100, 14, "#101c2e"],
-			[390, 260, 100, 14, "#101c2e"],
+			[0, 250, 200, 390, "#0c1626"],    # Spawn ledge (Plate A)
+			[200, 400, 200, 240, "#0c1626"],  # Middle step (Plate B), 150px below
+			[400, 550, 560, 90, "#0a121e"],   # Floor (Plate C), 150px below
+			[590, 0, 260, 430, "#0d1829"],    # Airlock roof over Doors 1-3
 		],
 		"plates": [
-			{"id": "p1", "x": 440, "y": 256, "w": 48, "h": 12, "doors": ["d1"], "release_delay": 0.5},
-			{"id": "p2", "x": 150, "y": 546, "w": 48, "h": 12, "doors": ["d2"], "release_delay": 0.5},
+			{"id": "pA", "x": 150, "y": 246, "w": 48, "h": 12, "doors": ["d3"], "release_delay": 0.5},
+			{"id": "pB", "x": 300, "y": 396, "w": 48, "h": 12, "doors": ["d2"], "release_delay": 0.5},
+			{"id": "pC", "x": 428, "y": 546, "w": 48, "h": 12, "doors": ["d1"], "release_delay": 0.5},
 		],
 		"doors": [
-			{"id": "d1", "x": 550, "y": 510, "w": 16, "h": 80},
-			{"id": "d2", "x": 740, "y": 510, "w": 16, "h": 80},
+			{"id": "d1", "x": 600, "y": 490, "w": 18, "h": 120},
+			{"id": "d2", "x": 720, "y": 490, "w": 18, "h": 120},
+			{"id": "d3", "x": 840, "y": 490, "w": 18, "h": 120},
 		],
 		"terminal": {
-			"x": 620, "y": 535,
+			"x": 70, "y": 235,
 			"title": "ARCHIVE 02: SIGNAL ANOMALY",
-			"text": "ARCHIVE 02: WARNING: THE SIGNAL YOU ARE TRACING DOES NOT ORIGINATE FROM YOU.\nWHO IS THE ARCHIVE, AND WHO IS THE PROGRAM?",
+			"text": "ARCHIVE 02: WARNING: THE SIGNAL YOU ARE TRACING DOES NOT ORIGINATE FROM YOU.\nWHO IS THE ARCHIVE, AND WHO IS THE PROGRAM?\nTHE SEALS OPEN IN REVERSE: THE LAST PLATE YOU TOUCH OPENS THE FIRST DOOR.",
 		},
-		"exit": [870, 510],
+		"exit": [905, 500],
 	},
 	# LEVEL 3: REVELATION (THE ORIGINAL)
 	{
