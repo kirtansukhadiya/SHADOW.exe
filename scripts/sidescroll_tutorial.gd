@@ -27,11 +27,11 @@ func _ready() -> void:
 
 	if hud:
 		if hud.has_method("set_level_name"):
-			hud.set_level_name("TUTORIAL PROTOCOL // BASICS")
+			hud.set_level_name("TUTORIAL // BASICS")
 		if hud.has_method("set_shadow_status"):
 			hud.set_shadow_status("STEP 1: Run [A]/[D], Jump [W] over the barrier.")
 		if hud.has_method("show_message"):
-			hud.show_message("WELCOME TO SHADOW.exe\nSYSTEM CALIBRATION INITIATED", 3.5)
+			hud.show_message("WELCOME TO SHADOW FLIP\nSYSTEM CALIBRATION INITIATED", 3.5)
 
 
 func _process(delta: float) -> void:

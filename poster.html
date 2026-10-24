@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SHADOW FLIP // Official Game Poster</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #03070d;
+      --cyan: #00f0ff;
+      --orange: #ff7700;
+      --violet: #d000ff;
+      --text: #c9e8fb;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Share Tech Mono', monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px 20px 60px 20px;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+    h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 32px;
+      color: var(--cyan);
+      letter-spacing: 3px;
+      text-shadow: 0 0 15px rgba(0, 240, 255, 0.6);
+      margin-bottom: 8px;
+    }
+    .tagline {
+      color: var(--orange);
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+    .toggle-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 25px;
+      justify-content: center;
+    }
+    .btn {
+      background: rgba(0, 240, 255, 0.1);
+      border: 1px solid var(--cyan);
+      color: var(--cyan);
+      padding: 8px 18px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn:hover, .btn.active {
+      background: var(--cyan);
+      color: #03070d;
+      box-shadow: 0 0 15px rgba(0, 240, 255, 0.8);
+    }
+    .poster-container {
+      position: relative;
+      max-width: 820px;
+      width: 100%;
+      border: 1px solid var(--cyan);
+      box-shadow: 0 0 35px rgba(0, 240, 255, 0.35);
+      border-radius: 6px;
+      overflow: hidden;
+      background: #02060e;
+    }
+    .poster-img {
+      width: 100%;
+      height: auto;
+      display: block;
+      transition: opacity 0.3s ease;
+    }
+    .footer-links {
+      margin-top: 30px;
+      display: flex;
+      gap: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>SHADOW FLIP</h1>
+    <div class="tagline">"Your shadow remembers everything you regret."</div>
+  </header>
+
+  <div class="toggle-bar">
+    <button class="btn active" id="btn-cinematic" onclick="showPoster('cinematic')">🖼️ CINEMATIC POSTER</button>
+    <button class="btn" id="btn-infographic" onclick="showPoster('infographic')">📊 TECHNICAL / STORY POSTER</button>
+    <a href="index.html" class="btn">▶ LAUNCH GAME</a>
+  </div>
+
+  <div class="poster-container">
+    <img id="poster-display" class="poster-img" src="assets/art/poster.jpg" alt="SHADOW FLIP Game Poster">
+  </div>
+
+  <div class="footer-links">
+    <a href="assets/art/poster.jpg" download="SHADOW_exe_Cinematic_Poster.jpg" class="btn">💾 DOWNLOAD CINEMATIC POSTER</a>
+    <a href="assets/art/poster.png" download="SHADOW_exe_Technical_Poster.png" class="btn">💾 DOWNLOAD TECHNICAL POSTER</a>
+  </div>
+
+  <script>
+    function showPoster(type) {
+      const img = document.getElementById('poster-display');
+      const btnC = document.getElementById('btn-cinematic');
+      const btnI = document.getElementById('btn-infographic');
+      if (type === 'cinematic') {
+        img.src = 'assets/art/poster.jpg';
+        btnC.classList.add('active');
+        btnI.classList.remove('active');
+      } else {
+        img.src = 'assets/art/poster.png';
+        btnI.classList.add('active');
+        btnC.classList.remove('active');
+      }
+    }
+  </script>
+
+</body>
+</html>

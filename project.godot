@@ -14,7 +14,7 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 
 [application]
 
-config/name="SHADOW.exe"
+config/name="SHADOW FLIP"
 config/description="Your shadow remembers everything you regret."
 run/main_scene="res://scenes/WebGame.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")

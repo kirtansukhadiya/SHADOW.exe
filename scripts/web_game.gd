@@ -35,7 +35,7 @@ enum State { MENU, PLAYING, VICTORY }
 
 # Level definitions copied from the web build.
 const LEVELS := [
-	# LEVEL 0: TUTORIAL PROTOCOL
+	# LEVEL 0: TUTORIAL
 	# The gentlest reverse puzzle, with on-screen steps ("hints") and plate /
 	# door labels. Why reversal is mandatory:
 	#  - Plate A is on the spawn ledge; the 150px drop (jump ~133px) is one-way,
@@ -44,7 +44,7 @@ const LEVELS := [
 	#    flipping walks it back over B and up to A.
 	#  - Plate B is ~160px from Door 1, too far to hold it yourself.
 	{
-		"name": "TUTORIAL PROTOCOL",
+		"name": "TUTORIAL",
 		"phase": "CALIBRATION",
 		"subtitle": "LEARN TO REVERSE YOUR ECHO.",
 		"hints": true,
@@ -64,7 +64,7 @@ const LEVELS := [
 		],
 		"terminal": {
 			"x": 70, "y": 385,
-			"title": "TUTORIAL PROTOCOL LOG",
+			"title": "TUTORIAL LOG",
 			"text": "YOUR ECHO REPLAYS YOUR STEPS IN THE ORDER YOU TOOK THEM.\n1. Walk over PLATE A and drop off the ledge. You can't climb back.\n2. Step on PLATE B, walk to DOOR 1 and press [SPACE] to deploy your echo.\n3. When the echo reaches B, go through DOOR 1.\n4. DOOR 2 needs A, which the echo already passed. Press [F] to REVERSE it.",
 		},
 		"exit": [820, 500],
@@ -236,6 +236,7 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_cube_outer = _rounded_square(8.0, 2.5)
 	_cube_inner = _rounded_square(5.0, 1.5)
+	_init_spores()
 	_audio = WebAudio.new()
 	add_child(_audio)
 	_build_page()
@@ -298,7 +299,7 @@ func _build_top_nav() -> Control:
 	row.add_child(title)
 
 	_brand = Control.new()
-	_brand.custom_minimum_size = Vector2(UI.orbitron(900).get_string_size("SHADOW.exe", HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x + 4, 22)
+	_brand.custom_minimum_size = Vector2(UI.orbitron(900).get_string_size("SHADOW FLIP", HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x + 4, 22)
 	_brand.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_brand.draw.connect(_draw_brand)
 	title.add_child(_brand)
@@ -337,7 +338,7 @@ func _badge(text: String, color: Color, border: Color, bg: Color, parent: Contro
 	return l
 
 
-## Brand "SHADOW.exe" with the CSS glitch text-shadow (3s, alternate).
+## Brand "SHADOW FLIP" with the CSS glitch text-shadow (3s, alternate).
 func _draw_brand() -> void:
 	var font := UI.orbitron(900)
 	var pos := Vector2(2, 17)
@@ -345,14 +346,14 @@ func _draw_brand() -> void:
 	if t > 1.0:
 		t = 2.0 - t
 	if t > 0.1 and t < 0.3:
-		_brand.draw_string(font, pos + Vector2(-2, 0), "SHADOW.exe", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color("#ff0055"))
-		_brand.draw_string(font, pos + Vector2(2, 0), "SHADOW.exe", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color("#00ffff"))
+		_brand.draw_string(font, pos + Vector2(-2, 0), "SHADOW FLIP", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color("#ff0055"))
+		_brand.draw_string(font, pos + Vector2(2, 0), "SHADOW FLIP", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color("#00ffff"))
 	elif t >= 0.3 and t < 0.5:
-		_brand.draw_string(font, pos + Vector2(2, 0), "SHADOW.exe", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color("#ff0055"))
-		_brand.draw_string(font, pos + Vector2(-2, 0), "SHADOW.exe", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color("#00ffff"))
+		_brand.draw_string(font, pos + Vector2(2, 0), "SHADOW FLIP", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color("#ff0055"))
+		_brand.draw_string(font, pos + Vector2(-2, 0), "SHADOW FLIP", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color("#00ffff"))
 	else:
-		_brand.draw_string_outline(font, pos, "SHADOW.exe", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, 8, Color(UI.CYAN, 0.25))
-	_brand.draw_string(font, pos, "SHADOW.exe", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, UI.CYAN)
+		_brand.draw_string_outline(font, pos, "SHADOW FLIP", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, 8, Color(UI.CYAN, 0.25))
+	_brand.draw_string(font, pos, "SHADOW FLIP", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, UI.CYAN)
 
 
 func _build_game_container() -> Control:
@@ -810,16 +811,130 @@ func _glow(pos: Vector2, radius: float, color: Color, alpha: float = 0.45) -> vo
 	WebWorld.draw_glow(_canvas, pos, radius, Color(color, alpha))
 
 
+var _ambient_spores: Array[Dictionary] = []
+
+func _init_spores() -> void:
+	if _ambient_spores.size() > 0:
+		return
+	for i in 54:
+		_ambient_spores.append({
+			"base_x": fmod(float(i) * 37.7, CANVAS_W),
+			"base_y": fmod(float(i) * 29.3, CANVAS_H),
+			"speed": 10.0 + float(i % 6) * 3.0,
+			"amp": 16.0 + float(i % 5) * 6.0,
+			"freq": 0.6 + float(i % 4) * 0.3,
+			"phase": float(i) * 0.8,
+			"sz": 1.2 + float(i % 3) * 0.7,
+			"col": UI.VIOLET if i % 5 == 0 else (UI.ORANGE if i % 3 == 0 else UI.CYAN)
+		})
+
+
+func _draw_hollow_atmosphere(c: CanvasItem, time: float) -> void:
+	# 1. Deep Cavern Gradient Base (Hollow Knight deep subterranean palette)
+	c.draw_rect(Rect2(0, 0, CANVAS_W, CANVAS_H), Color("#030914"))
+	c.draw_rect(Rect2(0, 0, CANVAS_W, 200), Color(0.01, 0.02, 0.04, 0.65))
+	c.draw_rect(Rect2(0, 520, CANVAS_W, 120), Color(0.01, 0.03, 0.06, 0.65))
+
+	# 2. Distant Gothic Cavern Pillars & Spired Caps (Far Depth)
+	var pillars: Array[Vector3] = [
+		Vector3(60, 50, 90),
+		Vector3(230, 60, 70),
+		Vector3(440, 75, 40),
+		Vector3(670, 60, 70),
+		Vector3(850, 50, 90)
+	]
+	for p: Vector3 in pillars:
+		var px: float = p.x
+		var pw: float = p.y
+		var top: float = p.z
+		c.draw_rect(Rect2(px, top, pw, CANVAS_H - top), Color("#050d18"))
+		# Pointed gothic arch cap
+		c.draw_colored_polygon(PackedVector2Array([
+			Vector2(px - 10, top),
+			Vector2(px + pw / 2.0, top - 35),
+			Vector2(px + pw + 10, top)
+		]), Color("#050d18"))
+		# Conduit fluting line
+		c.draw_line(Vector2(px + pw / 2.0, top - 20), Vector2(px + pw / 2.0, CANVAS_H), Color(0, 240/255.0, 1, 0.08), 1.0)
+		for ry in range(int(top) + 80, int(CANVAS_H), 90):
+			c.draw_rect(Rect2(px - 4, ry, pw + 8, 8), Color(0, 240/255.0, 1, 0.05), false, 1.0)
+
+	# Connecting Archway Ribs
+	for i in pillars.size() - 1:
+		var p1: Vector3 = pillars[i]
+		var p2: Vector3 = pillars[i + 1]
+		var mid_x: float = (p1.x + p1.y + p2.x) / 2.0
+		var arch_top: float = minf(p1.z, p2.z) + 20.0
+		var pts := PackedVector2Array()
+		for step in 11:
+			var t: float = float(step) / 10.0
+			var bx: float = (1.0 - t) * (1.0 - t) * (p1.x + p1.y) + 2.0 * (1.0 - t) * t * mid_x + t * t * p2.x
+			var by: float = (1.0 - t) * (1.0 - t) * (p1.z + 50.0) + 2.0 * (1.0 - t) * t * arch_top + t * t * (p2.z + 50.0)
+			pts.append(Vector2(bx, by))
+		c.draw_polyline(pts, Color(0, 240/255.0, 1, 0.04), 1.5)
+
+	# 3. Cavern Ceiling Stalactites
+	var stalactites: Array[Vector3] = [
+		Vector3(0, 60, 25), Vector3(35, 95, 30), Vector3(80, 50, 20), Vector3(140, 110, 35), Vector3(200, 70, 25),
+		Vector3(310, 85, 28), Vector3(370, 125, 40), Vector3(420, 60, 20), Vector3(530, 100, 32), Vector3(590, 75, 24),
+		Vector3(650, 120, 38), Vector3(740, 65, 22), Vector3(800, 95, 30), Vector3(870, 110, 35), Vector3(930, 70, 30)
+	]
+	for s: Vector3 in stalactites:
+		c.draw_colored_polygon(PackedVector2Array([
+			Vector2(s.x, 0),
+			Vector2(s.x + s.z / 2.0, s.y),
+			Vector2(s.x + s.z, 0)
+		]), Color("#040b15"))
+		c.draw_rect(Rect2(s.x + s.z / 2.0 - 1.0, s.y - 3.0, 2.0, 3.0), Color(0, 240/255.0, 1, 0.2))
+
+	# 4. Volumetric Ethereal Light Shafts (God Rays)
+	var rays: Array[Vector4] = [
+		Vector4(120, 210, 180, 0.035),
+		Vector4(390, 520, 240, 0.045),
+		Vector4(720, 830, 170, 0.03)
+	]
+	for r: Vector4 in rays:
+		var pulse: float = 0.85 + 0.15 * sin(time * 1.4 + r.x * 0.01)
+		var a: float = r.w * pulse
+		var poly := PackedVector2Array([
+			Vector2(r.x, 0),
+			Vector2(r.y, 0),
+			Vector2(r.y + r.z, CANVAS_H),
+			Vector2(r.x + r.z, CANVAS_H)
+		])
+		c.draw_colored_polygon(poly, Color(0, 240/255.0, 1, a))
+
+	# 5. Undulating Abyss Void Mist
+	for layer in 2:
+		var speed: float = 0.7 if layer == 0 else 1.1
+		var wave_amp: float = 10.0 if layer == 0 else 6.0
+		var base_y: float = 575.0 if layer == 0 else 590.0
+		var fog_alpha: float = 0.05 if layer == 0 else 0.03
+		var pts := PackedVector2Array()
+		pts.append(Vector2(0, CANVAS_H))
+		for x in range(0, int(CANVAS_W) + 30, 30):
+			var fx := float(x)
+			var y := base_y + sin(fx * 0.015 + time * speed) * wave_amp + cos(fx * 0.03 - time * speed * 0.7) * (wave_amp * 0.5)
+			pts.append(Vector2(fx, y))
+		pts.append(Vector2(CANVAS_W, CANVAS_H))
+		c.draw_colored_polygon(pts, Color(0, 240/255.0, 1, fog_alpha))
+
+	# 6. Floating Luminescent Spores (Hollow Knight drifting motes)
+	for s: Dictionary in _ambient_spores:
+		var x: float = fmod(s.base_x + sin(time * s.freq + s.phase) * s.amp + CANVAS_W, CANVAS_W)
+		var y: float = fmod(fmod(s.base_y - time * s.speed, CANVAS_H) + CANVAS_H, CANVAS_H)
+		var pulse: float = 0.35 + 0.35 * sin(time * 2.2 + s.phase)
+		var col: Color = s.col
+		c.draw_circle(Vector2(x, y), s.sz, Color(col, pulse))
+		if s.sz > 1.8:
+			c.draw_circle(Vector2(x, y), s.sz * 2.2, Color(col, pulse * 0.25))
+
+
 func _draw_level() -> void:
 	var c := _canvas
 	var now := Time.get_ticks_msec() / 1000.0
-	# 1. Background cyber grid
-	c.draw_rect(Rect2(0, 0, CANVAS_W, CANVAS_H), Color("#03070d"))
-	var grid := Color(0, 240 / 255.0, 1, 0.04)
-	for x in range(0, int(CANVAS_W), 40):
-		c.draw_line(Vector2(x, 0), Vector2(x, CANVAS_H), grid, 1.0)
-	for y in range(0, int(CANVAS_H), 40):
-		c.draw_line(Vector2(0, y), Vector2(CANVAS_W, y), grid, 1.0)
+	# 1. Hollow Knight-style Subterranean Atmospheric Background
+	_draw_hollow_atmosphere(c, now)
 	c.draw_rect(Rect2(0, 590, CANVAS_W, 50), Color(1, 30 / 255.0, 60 / 255.0, 0.06))
 
 	# 2. Solids
@@ -993,24 +1108,20 @@ func _dashed_circle(center: Vector2, radius: float, dash: float, gap: float, rot
 
 func _draw_menu(time: float) -> void:
 	var c := _canvas
-	c.draw_rect(Rect2(0, 0, CANVAS_W, CANVAS_H), Color("#03070d"))
-	for x in range(0, int(CANVAS_W), 40):
-		c.draw_line(Vector2(x, 0), Vector2(x, CANVAS_H), Color(0, 240 / 255.0, 1, 0.05), 1.0)
+	_draw_hollow_atmosphere(c, time)
 
-	_text("SHADOW.exe", CANVAS_W / 2.0, 120, UI.orbitron(900), 48, UI.CYAN, 1, 18.0)
+	_text("SHADOW FLIP", CANVAS_W / 2.0, 120, UI.orbitron(900), 48, UI.CYAN, 1, 18.0)
 	_text("\"Your shadow remembers everything you regret.\"", CANVAS_W / 2.0, 155, UI.mono(), 16, UI.ORANGE, 1)
-	_text("HACKATHON THEME REQUIREMENT: REVERSAL PROTOCOL", CANVAS_W / 2.0, 180, UI.mono(), 13, Color(UI.CYAN, 0.7), 1)
 
 	var card_y := 220.0
-	# Three 240px cards with 20px gaps, centred (the web build overlapped the first two).
-	_draw_card(CANVAS_W / 2.0 - 380, card_y, 240, 150, UI.CYAN, "CYBER PROJECTION", "PLAYER", 0, time)
-	_draw_card(CANVAS_W / 2.0 - 120, card_y, 240, 150, UI.ORANGE, "PAST RECORDING", "ECHO CLONE", 1, time)
-	_draw_card(CANVAS_W / 2.0 + 140, card_y, 240, 150, UI.VIOLET, "REVERSED SIGNAL", "SHADOW FLIP", 2, time)
+	# Three 240px cards with 20px gaps, centred.
+	_draw_card(CANVAS_W / 2.0 - 380, card_y, 240, 150, UI.CYAN, "CYBER PROJECTION", "ECHO", 0, time)
+	_draw_card(CANVAS_W / 2.0 - 120, card_y, 240, 150, UI.ORANGE, "PAST RECORDING", "SHADOW", 1, time)
+	_draw_card(CANVAS_W / 2.0 + 140, card_y, 240, 150, UI.VIOLET, "REVERSED SIGNAL", "REVERSE SHADOW", 2, time)
 
 	_text("PRESS [SPACE] OR CLICK BELOW TO INITIALIZE", CANVAS_W / 2.0, 430, UI.orbitron(600), 18, Color.WHITE, 1)
 	_draw_menu_button(CANVAS_W / 2.0 - 160, 460, 320, 44, "▶ START CAMPAIGN (LEVEL 1)", UI.CYAN)
-	_draw_menu_button(CANVAS_W / 2.0 - 160, 515, 320, 38, "📖 TUTORIAL PROTOCOL", UI.ORANGE)
-	_draw_menu_button(CANVAS_W / 2.0 - 160, 565, 320, 38, "⚡ STORY ARCHIVES & MANUAL", UI.TEXT_MUTED)
+	_draw_menu_button(CANVAS_W / 2.0 - 160, 515, 320, 38, "📖 TUTORIAL", UI.ORANGE)
 
 
 func _draw_card(x: float, y: float, w: float, h: float, color: Color, tag: String, title: String, row: int, time: float) -> void:
@@ -1031,7 +1142,9 @@ func _draw_menu_button(x: float, y: float, w: float, h: float, label: String, co
 
 
 func _draw_victory() -> void:
-	_canvas.draw_rect(Rect2(0, 0, CANVAS_W, CANVAS_H), Color("#020509"))
+	var c := _canvas
+	var now := Time.get_ticks_msec() / 1000.0
+	_draw_hollow_atmosphere(c, now)
 	_text("SYSTEM ESCAPE COMPLETE", CANVAS_W / 2.0, 150, UI.orbitron(900), 42, UI.CYAN, 1, 20.0)
 	_text("IDENTITY VERIFIED: YOU ARE THE ECHO.", CANVAS_W / 2.0, 220, UI.orbitron(800), 22, UI.ORANGE, 1)
 	var lines := ["The red shadow was the original entity, preserved after system reset.",
@@ -1095,8 +1208,6 @@ func _on_canvas_input(event: InputEvent) -> void:
 		elif in_x and p.y >= 515 and p.y <= 553:
 			game_state = State.PLAYING
 			load_level(0, true)
-		elif in_x and p.y >= 565 and p.y <= 603:
-			_guide.open("CLOSE [SPACE / ENTER]")
 	elif game_state == State.VICTORY:
 		if p.x >= CANVAS_W / 2.0 - 140 and p.x <= CANVAS_W / 2.0 + 140 and p.y >= 460 and p.y <= 508:
 			game_state = State.MENU

@@ -1,11 +1,2 @@
 res://scripts/main_menu.gd
-res://scripts/sidescroll_player.gd
-res://scripts/sidescroll_shadow.gd
-res://scripts/web_game.gd
-res://scripts/game_data.gd
-res://scripts/sidescroll_level1.gd
-res://scripts/sidescroll_level2.gd
-res://scripts/sidescroll_level3.gd
-res://scripts/sidescroll_level_base.gd
-res://scripts/hud.gd
-res://scripts/terminal_modal.gd
+res://scripts/sidescroll_tutorial.gd

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>SHADOW.exe // Reversal Protocol</title>
+  <title>SHADOW FLIP // Reversal Protocol</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@600;800;900&display=swap" rel="stylesheet">
@@ -250,7 +250,7 @@
   <!-- Top Navigation & Status -->
   <div id="top-nav">
     <div class="nav-title">
-      <span class="brand glitch-title">SHADOW.exe</span>
+      <span class="brand glitch-title">SHADOW FLIP</span>
       <span class="badge" id="hud-level-badge">SYSTEM INITIALIZED</span>
       <span class="badge phase" id="hud-phase-badge">THEME: REVERSAL</span>
     </div>
@@ -539,9 +539,9 @@ function addParticle(x, y, vx, vy, color, size, life) {
 
 // Level Definitions matching Godot scenes
 const LEVELS = [
-  // LEVEL 0: TUTORIAL PROTOCOL
+  // LEVEL 0: TUTORIAL
   {
-    name: 'TUTORIAL PROTOCOL',
+    name: 'TUTORIAL',
     phase: 'CALIBRATION',
     subtitle: 'SHADOW CLONE & REVERSAL REHEARSAL',
     spawn: { x: 80, y: 520 },
@@ -562,7 +562,7 @@ const LEVELS = [
     ],
     terminal: {
       x: 150, y: 535,
-      title: 'TUTORIAL PROTOCOL LOG',
+      title: 'TUTORIAL LOG',
       text: '1. Walk [A/D] and Jump [W] onto the raised platform to touch Plate 1.\n' +
             '2. Return to the lower floor. Press [SPACE] to deploy your Shadow clone!\n' +
             '3. While your shadow steps on Plate 1, pass Door 1, then press [F] to REVERSE your shadow back onto Plate 2!'
@@ -700,6 +700,167 @@ const LEVELS = [
     exit: { x: 915, y: 505 }
   }
 ];
+
+// --- HOLLOW KNIGHT SUBTERRANEAN CYBER CAVERN BACKGROUND ---
+const AMBIENT_SPORES = [];
+for (let i = 0; i < 54; i++) {
+  AMBIENT_SPORES.push({
+    baseX: (i * 37.7) % CANVAS_W,
+    baseY: (i * 29.3) % CANVAS_H,
+    speed: 10 + (i % 6) * 3,
+    amp: 16 + (i % 5) * 6,
+    freq: 0.6 + (i % 4) * 0.3,
+    phase: i * 0.8,
+    sz: 1.2 + (i % 3) * 0.7,
+    col: (i % 5 === 0) ? 'rgba(208, 0, 255, ' : (i % 3 === 0 ? 'rgba(255, 170, 0, ' : 'rgba(0, 240, 255, ')
+  });
+}
+
+function drawHollowAtmosphere(ctx, time = 0) {
+  // 1. Deep Cavern Gradient Sky/Void (Hollow Knight subterranean palette)
+  const bgGrad = ctx.createLinearGradient(0, 0, 0, CANVAS_H);
+  bgGrad.addColorStop(0, '#010408');
+  bgGrad.addColorStop(0.45, '#040b17');
+  bgGrad.addColorStop(0.85, '#061324');
+  bgGrad.addColorStop(1, '#020710');
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+
+  // 2. Distant Subterranean Gothic Pillars & Spires (Far Silhouette Depth)
+  ctx.fillStyle = '#050d18';
+  const pillars = [
+    { x: 60, w: 50, top: 90 },
+    { x: 230, w: 60, top: 70 },
+    { x: 440, w: 75, top: 40 },
+    { x: 670, w: 60, top: 70 },
+    { x: 850, w: 50, top: 90 }
+  ];
+
+  for (const p of pillars) {
+    ctx.fillRect(p.x, p.top, p.w, CANVAS_H - p.top);
+    ctx.beginPath();
+    ctx.moveTo(p.x - 10, p.top);
+    ctx.lineTo(p.x + p.w / 2, p.top - 35);
+    ctx.lineTo(p.x + p.w + 10, p.top);
+    ctx.closePath();
+    ctx.fill();
+
+    // Subtle conduit fluting
+    ctx.strokeStyle = 'rgba(0, 240, 255, 0.08)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(p.x + p.w / 2, p.top - 20);
+    ctx.lineTo(p.x + p.w / 2, CANVAS_H);
+    ctx.stroke();
+
+    for (let ry = p.top + 80; ry < CANVAS_H; ry += 90) {
+      ctx.strokeStyle = 'rgba(0, 240, 255, 0.05)';
+      ctx.strokeRect(p.x - 4, ry, p.w + 8, 8);
+    }
+  }
+
+  // Connecting Gothic Archway Ribs
+  ctx.strokeStyle = 'rgba(0, 240, 255, 0.04)';
+  ctx.lineWidth = 2;
+  for (let i = 0; i < pillars.length - 1; i++) {
+    const p1 = pillars[i];
+    const p2 = pillars[i + 1];
+    const midX = (p1.x + p1.w + p2.x) / 2;
+    const archTop = Math.min(p1.top, p2.top) + 20;
+    ctx.beginPath();
+    ctx.moveTo(p1.x + p1.w, p1.top + 50);
+    ctx.quadraticCurveTo(midX, archTop, p2.x, p2.top + 50);
+    ctx.stroke();
+  }
+
+  // 3. Cavern Ceiling Stalactites
+  ctx.fillStyle = '#040b15';
+  const stalactites = [
+    [0, 60, 25], [35, 95, 30], [80, 50, 20], [140, 110, 35], [200, 70, 25],
+    [310, 85, 28], [370, 125, 40], [420, 60, 20], [530, 100, 32], [590, 75, 24],
+    [650, 120, 38], [740, 65, 22], [800, 95, 30], [870, 110, 35], [930, 70, 30]
+  ];
+  for (const [sx, sh, sw] of stalactites) {
+    ctx.beginPath();
+    ctx.moveTo(sx, 0);
+    ctx.lineTo(sx + sw / 2, sh);
+    ctx.lineTo(sx + sw, 0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = 'rgba(0, 240, 255, 0.2)';
+    ctx.fillRect(sx + sw / 2 - 1, sh - 3, 2, 3);
+    ctx.fillStyle = '#040b15';
+  }
+
+  // 4. Volumetric Ethereal Light Shafts (Hollow Knight God Rays)
+  const rays = [
+    { x1: 120, x2: 210, dx: 180, alpha: 0.04 },
+    { x1: 390, x2: 520, dx: 240, alpha: 0.055 },
+    { x1: 720, x2: 830, dx: 170, alpha: 0.04 }
+  ];
+  for (const ray of rays) {
+    const pulse = 0.85 + 0.15 * Math.sin(time * 1.4 + ray.x1 * 0.01);
+    const grad = ctx.createLinearGradient(ray.x1, 0, ray.x1 + ray.dx, CANVAS_H);
+    grad.addColorStop(0, `rgba(0, 240, 255, ${ray.alpha * pulse * 1.4})`);
+    grad.addColorStop(0.5, `rgba(0, 240, 255, ${ray.alpha * pulse})`);
+    grad.addColorStop(1, 'rgba(0, 240, 255, 0)');
+
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.moveTo(ray.x1, 0);
+    ctx.lineTo(ray.x2, 0);
+    ctx.lineTo(ray.x2 + ray.dx, CANVAS_H);
+    ctx.lineTo(ray.x1 + ray.dx, CANVAS_H);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // 5. Undulating Abyss Void Mist (Atmospheric rolling fog)
+  for (let layer = 0; layer < 2; layer++) {
+    const speed = layer === 0 ? 0.7 : 1.1;
+    const waveAmp = layer === 0 ? 10 : 6;
+    const baseY = layer === 0 ? 575 : 590;
+    const fogAlpha = layer === 0 ? 0.06 : 0.04;
+
+    ctx.fillStyle = `rgba(0, 240, 255, ${fogAlpha})`;
+    ctx.beginPath();
+    ctx.moveTo(0, CANVAS_H);
+    for (let x = 0; x <= CANVAS_W; x += 30) {
+      const y = baseY + Math.sin(x * 0.015 + time * speed) * waveAmp
+                      + Math.cos(x * 0.03 - time * speed * 0.7) * (waveAmp * 0.5);
+      ctx.lineTo(x, y);
+    }
+    ctx.lineTo(CANVAS_W, CANVAS_H);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // 6. Floating Luminescent Spores (Hollow Knight drifting motes)
+  for (const s of AMBIENT_SPORES) {
+    const x = (s.baseX + Math.sin(time * s.freq + s.phase) * s.amp + CANVAS_W) % CANVAS_W;
+    const y = ((s.baseY - time * s.speed) % CANVAS_H + CANVAS_H) % CANVAS_H;
+    const pulse = 0.35 + 0.35 * Math.sin(time * 2.2 + s.phase);
+
+    ctx.fillStyle = s.col + `${pulse.toFixed(3)})`;
+    ctx.beginPath();
+    ctx.arc(x, y, s.sz, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (s.sz > 1.8) {
+      ctx.fillStyle = s.col + `${(pulse * 0.25).toFixed(3)})`;
+      ctx.beginPath();
+      ctx.arc(x, y, s.sz * 2.4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // 7. Subtle Vignette
+  const vig = ctx.createRadialGradient(CANVAS_W / 2, CANVAS_H / 2, 280, CANVAS_W / 2, CANVAS_H / 2, 600);
+  vig.addColorStop(0, 'rgba(0, 0, 0, 0)');
+  vig.addColorStop(1, 'rgba(1, 4, 9, 0.45)');
+  ctx.fillStyle = vig;
+  ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+}
 
 // --- LEVEL INSTANCE RUNTIME ---
 class LevelRunner {
@@ -1123,29 +1284,12 @@ class LevelRunner {
     }
   }
 
-  draw(ctx) {
-    // 1. Draw Background Cyber Grid
-    ctx.fillStyle = '#03070d';
-    ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
-
-    ctx.strokeStyle = 'rgba(0, 240, 255, 0.04)';
-    ctx.lineWidth = 1;
-    const gridSz = 40;
-    for (let x = 0; x < CANVAS_W; x += gridSz) {
-      ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, CANVAS_H);
-      ctx.stroke();
-    }
-    for (let y = 0; y < CANVAS_H; y += gridSz) {
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(CANVAS_W, y);
-      ctx.stroke();
-    }
+  draw(ctx, time = 0) {
+    // 1. Draw Hollow Knight-style Subterranean Atmospheric Background
+    drawHollowAtmosphere(ctx, time);
 
     // Hazard Void glow for pits
-    ctx.fillStyle = 'rgba(255, 30, 60, 0.06)';
+    ctx.fillStyle = 'rgba(255, 30, 60, 0.08)';
     ctx.fillRect(0, 590, CANVAS_W, 50);
 
     // 2. Draw Solids (Platforms, Pillars, Roofs)
@@ -1464,17 +1608,7 @@ function restartLevel() {
 
 // --- TITLE MENU & VICTORY DRAWING ---
 function drawMenu(ctx, time) {
-  ctx.fillStyle = '#03070d';
-  ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
-
-  // Background Grid
-  ctx.strokeStyle = 'rgba(0, 240, 255, 0.05)';
-  for (let x = 0; x < CANVAS_W; x += 40) {
-    ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, CANVAS_H);
-    ctx.stroke();
-  }
+  drawHollowAtmosphere(ctx, time);
 
   // Title
   ctx.textAlign = 'center';
@@ -1482,7 +1616,7 @@ function drawMenu(ctx, time) {
   ctx.font = '900 48px "Orbitron"';
   ctx.shadowColor = '#00f0ff';
   ctx.shadowBlur = 18;
-  ctx.fillText('SHADOW.exe', CANVAS_W / 2, 120);
+  ctx.fillText('SHADOW FLIP', CANVAS_W / 2, 120);
   ctx.shadowBlur = 0;
 
   // Tagline
@@ -1490,23 +1624,19 @@ function drawMenu(ctx, time) {
   ctx.font = '16px "Share Tech Mono"';
   ctx.fillText('"Your shadow remembers everything you regret."', CANVAS_W / 2, 155);
 
-  ctx.fillStyle = 'rgba(0, 240, 255, 0.7)';
-  ctx.font = '13px "Share Tech Mono"';
-  ctx.fillText('HACKATHON THEME REQUIREMENT: REVERSAL PROTOCOL', CANVAS_W / 2, 180);
-
   // Character Dossier Cards Preview
   const cardY = 220;
   const cardW = 240;
   const cardH = 150;
 
-  // 1. Player Card (Cyan)
-  drawCard(ctx, CANVAS_W / 2 - 270, cardY, cardW, cardH, '#00f0ff', 'CYBER PROJECTION', 'PLAYER', 0, time);
+  // 1. Echo Card (Cyan)
+  drawCard(ctx, CANVAS_W / 2 - 380, cardY, cardW, cardH, '#00f0ff', 'CYBER PROJECTION', 'ECHO', 0, time);
 
-  // 2. Echo Ghost Card (Orange)
-  drawCard(ctx, CANVAS_W / 2 - 120, cardY, cardW, cardH, '#ff7700', 'PAST RECORDING', 'ECHO CLONE', 1, time);
+  // 2. Shadow Card (Orange)
+  drawCard(ctx, CANVAS_W / 2 - 120, cardY, cardW, cardH, '#ff7700', 'PAST RECORDING', 'SHADOW', 1, time);
 
-  // 3. Reversed Ghost Card (Violet)
-  drawCard(ctx, CANVAS_W / 2 + 150, cardY, cardW, cardH, '#d000ff', 'REVERSED SIGNAL', 'SHADOW FLIP', 2, time);
+  // 3. Reverse Shadow Card (Violet)
+  drawCard(ctx, CANVAS_W / 2 + 140, cardY, cardW, cardH, '#d000ff', 'REVERSED SIGNAL', 'REVERSE SHADOW', 2, time);
 
   // Menu Options / Buttons Info
   ctx.fillStyle = '#ffffff';
@@ -1515,8 +1645,7 @@ function drawMenu(ctx, time) {
 
   // Interactive Button Rects
   drawMenuButton(ctx, CANVAS_W / 2 - 160, 460, 320, 44, '▶ START CAMPAIGN (LEVEL 1)', '#00f0ff');
-  drawMenuButton(ctx, CANVAS_W / 2 - 160, 515, 320, 38, '📖 TUTORIAL PROTOCOL', '#ff7700');
-  drawMenuButton(ctx, CANVAS_W / 2 - 160, 565, 320, 38, '⚡ STORY ARCHIVES & MANUAL', '#8bb3cb');
+  drawMenuButton(ctx, CANVAS_W / 2 - 160, 515, 320, 38, '📖 TUTORIAL', '#ff7700');
 }
 
 function drawCard(ctx, x, y, w, h, color, tag, title, row, time) {
@@ -1559,8 +1688,7 @@ function drawMenuButton(ctx, x, y, w, h, text, color) {
 }
 
 function drawVictory(ctx, time) {
-  ctx.fillStyle = '#020509';
-  ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+  drawHollowAtmosphere(ctx, time);
 
   ctx.textAlign = 'center';
   ctx.fillStyle = '#00f0ff';
@@ -1719,18 +1847,6 @@ canvas.addEventListener('click', (e) => {
       gameState = STATE.PLAYING;
       loadLevel(0);
     }
-    // Manual / Story button
-    else if (clickX >= CANVAS_W / 2 - 160 && clickX <= CANVAS_W / 2 + 160 && clickY >= 565 && clickY <= 603) {
-      openModal(
-        'SHADOW.exe MANUAL // REVERSAL PROTOCOL',
-        'MISSION DIRECTIVE:\n' +
-        '1. [W] or [UP] to JUMP. Space is strictly for Shadow clone deployment.\n' +
-        '2. Walk across pressure plates to open security blast doors.\n' +
-        '3. Press [SPACE] to deploy your Shadow clone, which replays your past steps.\n' +
-        '4. Press [F] for SHADOW FLIP: time-reverses the clone\'s trajectory, sending it backward to unlock the second airlock door!\n' +
-        '5. Reaching the Extraction Portal triggers sector advance.'
-      );
-    }
   } else if (gameState === STATE.VICTORY) {
     if (clickX >= CANVAS_W / 2 - 140 && clickX <= CANVAS_W / 2 + 140 && clickY >= 460 && clickY <= 508) {
       gameState = STATE.MENU;
@@ -1801,7 +1917,7 @@ function gameLoop(now) {
           }
         }
       }
-      activeRunner.draw(ctx);
+      activeRunner.draw(ctx, timeSec);
     }
   } else if (gameState === STATE.MENU) {
     drawMenu(ctx, timeSec);
