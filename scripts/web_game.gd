@@ -97,73 +97,88 @@ const LEVELS := [
 		"exit": [890, 500],
 	},
 	# LEVEL 2: DOUBT (THE OPPOSITE)
+	# Why reversal is mandatory:
+	#  - Three one-way drops (150px each, jump ~133px): spawn ledge (Plate A),
+	#    middle step (Plate B), floor (Plate C). Any recording touches A, B, C
+	#    in that order.
+	#  - The airlock doors need the opposite order: Door 1 <- C, Door 2 <- B,
+	#    Door 3 <- A. A forward echo presses A, B, C; only a flipped echo
+	#    replays C, B, A.
+	#  - Plate C is ~160px from Door 1, too far to hold it yourself and get
+	#    through before the door shuts (0.5s release + close).
 	{
 		"name": "LEVEL 2 - DOUBT",
 		"phase": "THE OPPOSITE",
-		"subtitle": "WARNING: ORIGINAL SIGNAL NOT FOUND.",
-		"spawn": [70, 520],
+		"subtitle": "THREE SEALS. THEY OPEN IN THE OPPOSITE ORDER.",
+		"spawn": [110, 233],
 		"solids": [
-			[0, 550, 960, 90, "#0a121e"],
-			[540, 0, 210, 470, "#0d1829"],
-			[130, 450, 100, 14, "#101c2e"],
-			[260, 350, 100, 14, "#101c2e"],
-			[390, 260, 100, 14, "#101c2e"],
+			[0, 250, 200, 390, "#0c1626"],    # Spawn ledge (Plate A)
+			[200, 400, 200, 240, "#0c1626"],  # Middle step (Plate B), 150px below
+			[400, 550, 560, 90, "#0a121e"],   # Floor (Plate C), 150px below
+			[590, 0, 260, 430, "#0d1829"],    # Airlock roof over Doors 1-3
 		],
 		"plates": [
-			{"id": "p1", "x": 440, "y": 256, "w": 48, "h": 12, "doors": ["d1"], "release_delay": 0.5},
-			{"id": "p2", "x": 150, "y": 546, "w": 48, "h": 12, "doors": ["d2"], "release_delay": 0.5},
+			{"id": "pA", "x": 150, "y": 246, "w": 48, "h": 12, "doors": ["d3"], "release_delay": 0.5},
+			{"id": "pB", "x": 300, "y": 396, "w": 48, "h": 12, "doors": ["d2"], "release_delay": 0.5},
+			{"id": "pC", "x": 428, "y": 546, "w": 48, "h": 12, "doors": ["d1"], "release_delay": 0.5},
 		],
 		"doors": [
-			{"id": "d1", "x": 550, "y": 510, "w": 16, "h": 80},
-			{"id": "d2", "x": 740, "y": 510, "w": 16, "h": 80},
-		],
-		"terminal": {
-			"x": 620, "y": 535,
-			"title": "ARCHIVE 02: SIGNAL ANOMALY",
-			"text": "ARCHIVE 02: WARNING: THE SIGNAL YOU ARE TRACING DOES NOT ORIGINATE FROM YOU.\nWHO IS THE ARCHIVE, AND WHO IS THE PROGRAM?",
-		},
-		"exit": [870, 510],
-	},
-	# LEVEL 3: REVELATION (THE ORIGINAL)
-	# THE MASTER REVERSAL PUZZLE:
-	# Player spawns on High Origin Ledge (y=280) with Plate 1.
-	# Dropping down across void pillars is a one-way descent (>100px per drop).
-	# Once at Door 1 on the floor (y=550), the player can NEVER jump back up to Plate 1.
-	# Door 1 requires Plate 2 (Pillar 2).
-	# Door 2 requires Plate 3 (Low Bridge).
-	# Door 3 requires Plate 1 (High Origin Ledge).
-	# In forward replay, the shadow finishes at the bottom and cannot reach Plate 1.
-	# Shadow Flip [F] REVERSES time, ascending the shadow in reverse gravity back
-	# to the High Origin Ledge onto Plate 1, unlocking Door 3 to the portal!
-	{
-		"name": "LEVEL 3 - REVELATION",
-		"phase": "THE ORIGINAL",
-		"subtitle": "REVERSE FLIP MANDATORY // TEMPORAL DESCENT",
-		"spawn": [70, 264],
-		"solids": [
-			[0, 280, 220, 360, "#0c1626"],    # High Origin Ledge
-			[260, 380, 85, 260, "#0c1626"],   # Pillar 1
-			[385, 320, 85, 320, "#0c1626"],   # Pillar 2 (Plate 2)
-			[510, 440, 75, 20, "#101c2e"],    # Low Bridge (Plate 3)
-			[610, 550, 350, 90, "#0a121e"],   # Vault Floor
-			[640, 0, 220, 430, "#0d1829"],    # Overhead Bulkhead
-		],
-		"plates": [
-			{"id": "p1", "x": 140, "y": 276, "w": 48, "h": 12, "doors": ["d3"], "release_delay": 2.0},
-			{"id": "p2", "x": 425, "y": 316, "w": 48, "h": 12, "doors": ["d1"], "release_delay": 1.2},
-			{"id": "p3", "x": 545, "y": 436, "w": 48, "h": 12, "doors": ["d2"], "release_delay": 1.2},
-		],
-		"doors": [
-			{"id": "d1", "x": 650, "y": 490, "w": 18, "h": 120},
-			{"id": "d2", "x": 750, "y": 490, "w": 18, "h": 120},
+			{"id": "d1", "x": 600, "y": 490, "w": 18, "h": 120},
+			{"id": "d2", "x": 720, "y": 490, "w": 18, "h": 120},
 			{"id": "d3", "x": 840, "y": 490, "w": 18, "h": 120},
 		],
 		"terminal": {
-			"x": 700, "y": 535,
-			"title": "ARCHIVE 03: CLASSIFIED BIOMETRIC AUDIT",
-			"text": "CRITICAL ALERT: 0.00% BIOLOGICAL RESIDUE DETECTED.\nIDENTITY AUDIT: YOU ARE NOT THE ORIGINAL ESCAPEE.\nYOU ARE A TIME-PROJECTED BLUE ECHO SENT FORWARD INTO THE FUTURE.\nTHE RED SHADOW WAS THE ORIGINAL ENTITY, PRESERVED AFTER SYSTEM RESET.\nREVERSE TIME WITH [F] TO SHATTER THE RECURSIVE CONTAINMENT CYCLE.",
+			"x": 70, "y": 235,
+			"title": "ARCHIVE 02: SIGNAL ANOMALY",
+			"text": "ARCHIVE 02: WARNING: THE SIGNAL YOU ARE TRACING DOES NOT ORIGINATE FROM YOU.\nWHO IS THE ARCHIVE, AND WHO IS THE PROGRAM?\nTHE SEALS OPEN IN REVERSE: THE LAST PLATE YOU TOUCH OPENS THE FIRST DOOR.",
 		},
-		"exit": [900, 505],
+		"exit": [905, 500],
+	},
+	# LEVEL 3: REVELATION (THE ORIGINAL)
+	# THE MASTER REVERSAL PUZZLE (ONE-WAY HALFWAY DROP):
+	# Level is split into FIRST HALF (x: 0-450, y: 320) and SECOND HALF (x: 450-960, y: 550).
+	# At x = 450, there is a massive 230px ONE-WAY drop.
+	# After dropping into the second half, jump limitations (max ~75px) make it 100% IMPOSSIBLE to go back!
+	#
+	# - Plate 1 is in FIRST HALF at (180, 306) -> Opens Door 3 (Final Exit Door at x=860).
+	# - Plate 2 is in SECOND HALF at (520, 536) -> Opens Door 1 (Outer Airlock at x=700).
+	# - Plate 3 is in SECOND HALF at (630, 466) -> Opens Door 2 (Inner Airlock at x=780).
+	#
+	# Forward replay starts at Plate 1, drops down to Plate 2 and Plate 3, and terminates at Door 1.
+	# The player enters Chamber 2 and is blocked by Door 3.
+	# The forward shadow is stuck at the bottom in the second half and CANNOT jump 230px back up.
+	# The ONLY way to reach Plate 1 and open Door 3 is to press [F] (SHADOW FLIP):
+	# The shadow time-reverses, leaps backward up the 230px cliff against gravity into the first half,
+	# and steps onto Plate 1, opening Door 3 to the Extraction Portal!
+	{
+		"name": "LEVEL 3 - REVELATION",
+		"phase": "THE ORIGINAL",
+		"subtitle": "HALFWAY DIVIDE: 230px DROP // REVERSAL FLIP MANDATORY",
+		"spawn": [70, 304],
+		"solids": [
+			[0, 320, 450, 320, "#0c1626"],    # First Half Ground (y=320)
+			[0, 0, 400, 180, "#0d1829"],      # First Half Roof
+			[410, 0, 60, 240, "#0d1829"],     # Halfway Chute Overhang
+			[450, 550, 510, 90, "#0a121e"],   # Second Half Floor (y=550)
+			[590, 480, 80, 70, "#101c2e"],    # Second Half Step Pillar
+			[690, 0, 230, 430, "#0d1829"],    # Airlock Bulkhead
+		],
+		"plates": [
+			{"id": "p1", "x": 180, "y": 306, "w": 48, "h": 12, "doors": ["d3"], "release_delay": 2.5},
+			{"id": "p2", "x": 520, "y": 536, "w": 48, "h": 12, "doors": ["d1"], "release_delay": 1.2},
+			{"id": "p3", "x": 630, "y": 466, "w": 48, "h": 12, "doors": ["d2"], "release_delay": 1.2},
+		],
+		"doors": [
+			{"id": "d1", "x": 700, "y": 490, "w": 18, "h": 120},
+			{"id": "d2", "x": 780, "y": 490, "w": 18, "h": 120},
+			{"id": "d3", "x": 860, "y": 490, "w": 18, "h": 120},
+		],
+		"terminal": {
+			"x": 310, "y": 305,
+			"title": "ARCHIVE 03: THE TEMPORAL DIVIDE",
+			"text": "CRITICAL ALERT: 0.00% BIOLOGICAL RESIDUE DETECTED.\nIDENTITY AUDIT: YOU ARE NOT THE ORIGINAL ESCAPEE. YOU ARE THE ECHO.\nHALFWAY DROP IS ONE-WAY (230px DROP: JUMP LIMITATIONS PREVENT RETURN).\nPASS THE DIVIDE, RECORD TO DOOR 1, THEN USE SHADOW FLIP [F] TO REVERSE TIME!",
+		},
+		"exit": [915, 505],
 	},
 ]
 
@@ -908,8 +923,10 @@ func _draw_portal_label() -> void:
 			baseline = top + 15.0
 	var half_w := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x / 2.0
 	if exit_pos.x - half_w < 8.0 or exit_pos.x + half_w > CANVAS_W - 8.0:
-		_text("EXTRACTION", exit_pos.x, baseline, font, 11, UI.CYAN, 1)
-		_text("PORTAL", exit_pos.x, baseline + 14.0, font, 11, UI.CYAN, 1)
+		for i in 2:
+			var word: String = ["EXTRACTION", "PORTAL"][i]
+			var hw := font.get_string_size(word, HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x / 2.0
+			_text(word, clampf(exit_pos.x, 8.0 + hw, CANVAS_W - 8.0 - hw), baseline + 14.0 * i, font, 11, UI.CYAN, 1)
 	else:
 		_text(label, exit_pos.x, baseline, font, 11, UI.CYAN, 1)
 
