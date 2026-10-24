@@ -14,6 +14,7 @@ const CUBIT_FILL := Color("#0d1f38")
 const ECHO_FILL := Color("#24140a")
 const REVERSED_FILL := Color("#1c0a2a")
 const CUBIT_ROLL_SPEED := 6.0  # radians per second while moving
+const CUBIT_IDLE_SPIN := 2.0   # radians per second while standing (never stops)
 
 # --- GAME CONSTANTS (same as web) ---
 const CANVAS_W := 960.0
@@ -378,10 +379,9 @@ func _update(dt: float) -> void:
 	player.vy += GRAVITY * dt
 	if move_dir != 0.0:
 		player.facing = move_dir
-	# Cubit tumbles in the direction of travel and settles flat when idle.
-	player.roll += move_dir * CUBIT_ROLL_SPEED * dt
-	var roll_target: float = player.roll if move_dir != 0.0 else snappedf(player.roll, PI / 2.0)
-	player.cube_ang = lerpf(player.cube_ang, roll_target, 1.0 - exp(-dt * 18.0))
+	# Cubit always spins toward the way it faces; faster while moving.
+	player.roll += player.facing * (CUBIT_ROLL_SPEED if move_dir != 0.0 else CUBIT_IDLE_SPIN) * dt
+	player.cube_ang = player.roll
 
 	# Coyote time & jump buffering
 	coyote_timer = 0.14 if player.on_ground else maxf(0.0, coyote_timer - dt)
@@ -736,8 +736,7 @@ func _draw_level() -> void:
 	# 8. Player
 	if not player.is_dead:
 		var p_pos := Vector2(player.x, player.y)
-		var wobble := sin(now * 1.5) * 0.15 if player.vx == 0.0 else 0.0
-		_draw_cubit(p_pos, player.cube_ang + wobble, player.facing, 1.0, UI.CYAN, CUBIT_FILL, now)
+		_draw_cubit(p_pos, player.cube_ang, player.facing, 1.0, UI.CYAN, CUBIT_FILL, now)
 
 	# 9. Particles (web advances them by a fixed 0.016 per draw)
 	for i in range(particles.size() - 1, -1, -1):
@@ -826,8 +825,8 @@ func _draw_menu(time: float) -> void:
 func _draw_card(x: float, y: float, w: float, h: float, color: Color, tag: String, title: String, row: int, time: float) -> void:
 	_canvas.draw_rect(Rect2(x, y, w, h), UI.MODAL_BG)
 	_canvas.draw_rect(Rect2(x, y, w, h), color, false, 1.5)
-	# Player idles; the echo tumbles forward; the reversed shadow tumbles backward.
-	var ang: float = [sin(time * 1.5) * 0.15, time * 2.0, -time * 2.0][row]
+	# Player and echo spin forward; the reversed shadow spins backward.
+	var ang: float = [time * CUBIT_IDLE_SPIN, time * CUBIT_IDLE_SPIN, -time * CUBIT_IDLE_SPIN][row]
 	var fill: Color = [CUBIT_FILL, ECHO_FILL, REVERSED_FILL][row]
 	_draw_cubit(Vector2(x + w / 2.0, y + 40), ang, 1.0, 2.0, color, fill, time)
 	_text(tag, x + w / 2.0, y + 105, UI.mono(), 10, color, 1)
