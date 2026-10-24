@@ -8,6 +8,7 @@ const UI := preload("res://scripts/ui_style.gd")
 const WebWorld := preload("res://scripts/web_world.gd")
 const TerminalModal := preload("res://scripts/terminal_modal.gd")
 const WebAudio := preload("res://scripts/web_audio.gd")
+const ControlGuide := preload("res://scripts/control_guide.gd")
 # Cubit: the player is a hovering cube that tumbles as it moves. The echo
 # and reversed shadow are Cubits too, in their own colours.
 const CUBIT_FILL := Color("#0d1f38")
@@ -35,32 +36,38 @@ enum State { MENU, PLAYING, VICTORY }
 # Level definitions copied from the web build.
 const LEVELS := [
 	# LEVEL 0: TUTORIAL PROTOCOL
+	# The gentlest reverse puzzle, with on-screen steps ("hints") and plate /
+	# door labels. Why reversal is mandatory:
+	#  - Plate A is on the spawn ledge; the 150px drop (jump ~133px) is one-way,
+	#    so every recording touches A before B.
+	#  - Door 1 needs B, then Door 2 needs A. A forward echo presses A then B;
+	#    flipping walks it back over B and up to A.
+	#  - Plate B is ~160px from Door 1, too far to hold it yourself.
 	{
 		"name": "TUTORIAL PROTOCOL",
 		"phase": "CALIBRATION",
-		"subtitle": "SHADOW CLONE & REVERSAL REHEARSAL",
-		"spawn": [80, 520],
+		"subtitle": "LEARN TO REVERSE YOUR ECHO.",
+		"hints": true,
+		"spawn": [110, 383],
 		"solids": [
-			[0, 550, 960, 90, "#0a121e"],
-			[218, 520, 24, 30, "#142236"],
-			[325, 440, 110, 14, "#101c2e"],
-			[510, 0, 20, 470, "#0e1828"],
-			[690, 0, 20, 470, "#0e1828"],
+			[0, 400, 260, 240, "#0c1626"],    # Spawn ledge (Plate A), 150px above the floor
+			[260, 550, 700, 90, "#0a121e"],   # Floor (Plate B)
+			[550, 0, 170, 430, "#0d1829"],    # Airlock roof over Doors 1 & 2
 		],
 		"plates": [
-			{"id": "p1", "x": 380, "y": 436, "w": 48, "h": 12, "doors": ["d1"], "release_delay": 0.5},
-			{"id": "p2", "x": 300, "y": 546, "w": 48, "h": 12, "doors": ["d2"], "release_delay": 0.5},
+			{"id": "pA", "label": "A", "x": 190, "y": 396, "w": 48, "h": 12, "doors": ["d2"], "release_delay": 0.5},
+			{"id": "pB", "label": "B", "x": 380, "y": 546, "w": 48, "h": 12, "doors": ["d1"], "release_delay": 0.5},
 		],
 		"doors": [
-			{"id": "d1", "x": 520, "y": 510, "w": 16, "h": 80},
-			{"id": "d2", "x": 700, "y": 510, "w": 16, "h": 80},
+			{"id": "d1", "needs": "B", "x": 560, "y": 490, "w": 18, "h": 120},
+			{"id": "d2", "needs": "A", "x": 700, "y": 490, "w": 18, "h": 120},
 		],
 		"terminal": {
-			"x": 150, "y": 535,
+			"x": 70, "y": 385,
 			"title": "TUTORIAL PROTOCOL LOG",
-			"text": "1. Walk [A/D] and Jump [W] onto the raised platform to touch Plate 1.\n2. Return to the lower floor. Press [SPACE] to deploy your Shadow clone!\n3. While your shadow steps on Plate 1, pass Door 1, then press [F] to REVERSE your shadow back onto Plate 2!",
+			"text": "YOUR ECHO REPLAYS YOUR STEPS IN THE ORDER YOU TOOK THEM.\n1. Walk over PLATE A and drop off the ledge. You can't climb back.\n2. Step on PLATE B, walk to DOOR 1 and press [SPACE] to deploy your echo.\n3. When the echo reaches B, go through DOOR 1.\n4. DOOR 2 needs A, which the echo already passed. Press [F] to REVERSE it.",
 		},
-		"exit": [850, 510],
+		"exit": [820, 500],
 	},
 	# LEVEL 1: DISCOVERY (THE ECHO)
 	# Why reversal is mandatory:
@@ -182,8 +189,6 @@ const LEVELS := [
 	},
 ]
 
-const MANUAL_TITLE := "SHADOW.exe MANUAL // REVERSAL PROTOCOL"
-const MANUAL_TEXT := "MISSION DIRECTIVE:\n1. [W] or [UP] to JUMP. Space is strictly for Shadow clone deployment.\n2. Walk across pressure plates to open security blast doors.\n3. Press [SPACE] to deploy your Shadow clone, which replays your past steps.\n4. Press [F] for SHADOW FLIP: time-reverses the clone, so it revisits your steps in the opposite order. Every sector requires it.\n5. Reaching the Extraction Portal triggers sector advance."
 
 # --- GLOBAL STATE ---
 var game_state: State = State.MENU
@@ -209,10 +214,12 @@ var coyote_timer: float = 0.0
 var jump_buffer_timer: float = 0.0
 var shadow: Dictionary
 var complete: bool = false
+var touched: Dictionary = {}  # plate ids the player has stood on (tutorial hints)
 
 # --- NODES ---
 var _canvas: Control
 var _modal: Control
+var _guide: Control
 var _audio: Node
 var _level_badge: Label
 var _phase_badge: Label
@@ -389,15 +396,13 @@ void fragment() {
 	_canvas.add_child(crt)
 
 	_modal = TerminalModal.new()
-	_modal.closed.connect(func():
-		keys.left = false
-		keys.right = false
-		keys.jump = false
-		keys.deploy = false
-		keys.flip = false
-		keys.interact = false
-	)
+	_modal.closed.connect(_reset_keys)
 	_canvas.add_child(_modal)
+
+	_guide = ControlGuide.new()
+	_guide.cubit_drawer = draw_cubit_on
+	_guide.closed.connect(_reset_keys)
+	_canvas.add_child(_guide)
 	return frame
 
 
@@ -432,21 +437,19 @@ func _build_bottom_bar() -> Control:
 	return bar
 
 
+func _reset_keys() -> void:
+	for k in keys:
+		keys[k] = false
+
+
+func _popup_open() -> bool:
+	return _modal.is_open() or _guide.is_open()
+
+
 # ═══════════════════════════════ LEVEL RUNNER ═══════════════════════════════
 
 func show_level_instructions(_lvl: Dictionary) -> void:
-	var title: String = "PROTOCOL BRIEFING // CONTROLS & OBJECTIVE"
-	var body: String = (
-		"OPERATIONAL INSTRUCTIONS & CONTROLS:\n\n" +
-		"  • [W] / [↑]          JUMP across platforms & void\n" +
-		"  • [SPACE]            DEPLOY SHADOW (clone replays past recorded path)\n" +
-		"  • [F]                FLIP (REVERSES time! Rewinds shadow backward)\n" +
-		"  • [R]                RESET timeline sequence\n" +
-		"  • [A] / [D] / [←][→]  MOVE / SPRINT left and right\n\n" +
-		"MISSION OBJECTIVE:\n" +
-		"Cooperate with your time-reversed shadow to press plates, open security blast doors, and reach the Extraction Portal."
-	)
-	_modal.open(title, body, "START GAME [SPACE / ENTER]")
+	_guide.open("START [SPACE / ENTER]")
 
 
 func load_level(idx: int, show_briefing: bool = false) -> void:
@@ -480,13 +483,14 @@ func load_level(idx: int, show_briefing: bool = false) -> void:
 	shadow = {"active": false, "history": [], "index": 0, "playback_dir": 1, "x": 0.0, "y": 0.0,
 		"facing": 1.0, "cube_ang": 0.0, "is_reversed": false}
 	complete = false
+	touched.clear()
 
 	# Update top navigation badges
 	_level_badge.text = data.name
 	_phase_badge.text = data.phase
 
-	# Instructions ONLY appear before Level 1
-	if show_briefing and idx == 1 and game_state == State.PLAYING:
+	# The control guide appears when starting the tutorial or Level 1
+	if show_briefing and idx <= 1 and game_state == State.PLAYING:
 		show_level_instructions(data)
 
 
@@ -660,6 +664,8 @@ func _on_plate(e_x: float, e_y: float, p: Dictionary) -> bool:
 func _update_plates(dt: float) -> void:
 	for p in plates:
 		var standing := _on_plate(player.x, player.y, p)
+		if standing:
+			touched[p.id] = true
 		if shadow.active and _on_plate(shadow.x, shadow.y, p):
 			standing = true
 		if standing:
@@ -726,7 +732,7 @@ func _process(delta: float) -> void:
 		screen_shake = maxf(0.0, screen_shake - dt * 25.0)
 
 	if game_state == State.PLAYING:
-		if not _modal.is_open():
+		if not _popup_open():
 			_update(dt)
 			if player.is_dead:
 				death_transition -= dt
@@ -761,26 +767,30 @@ func _text(s: String, x: float, y: float, font: Font, sz: int, color: Color, ali
 ## Draws a Cubit in the 32px character box centred on `pos` (feet at +16).
 ## `s` scales the whole character (2.0 on the title cards).
 func _draw_cubit(pos: Vector2, ang: float, facing: float, s: float, outline: Color, fill: Color, t: float) -> void:
-	var c := _canvas
+	draw_cubit_on(_canvas, _shake_off, pos, ang, facing, s, outline, fill, t)
+
+
+## Same as _draw_cubit, onto any CanvasItem with a draw offset.
+func draw_cubit_on(c: CanvasItem, off: Vector2, pos: Vector2, ang: float, facing: float, s: float, outline: Color, fill: Color, t: float) -> void:
 	# Soft floor shadow
-	c.draw_set_transform(_shake_off + pos + Vector2(0, 15.0 * s), 0.0, Vector2(1.0, 0.22))
+	c.draw_set_transform(off + pos + Vector2(0, 15.0 * s), 0.0, Vector2(1.0, 0.22))
 	c.draw_circle(Vector2.ZERO, 7.0 * s, Color(outline, 0.12))
 	# Hovering, tumbling body
 	var center := pos + Vector2(0, (4.0 + sin(t * 3.0) * 1.4) * s)
-	c.draw_set_transform(_shake_off)
-	_glow(center, 17.0 * s, outline, 0.35)
-	c.draw_set_transform(_shake_off + center, ang, Vector2(s, s))
+	c.draw_set_transform(off)
+	WebWorld.draw_glow(c, center, 17.0 * s, Color(outline, 0.35))
+	c.draw_set_transform(off + center, ang, Vector2(s, s))
 	c.draw_colored_polygon(_cube_outer, fill)
 	c.draw_polyline(_cube_outer, Color(outline, 0.3), 4.0)
 	c.draw_polyline(_cube_outer, outline, 1.5)
 	c.draw_polyline(_cube_inner, Color(outline, 0.35), 1.0)
 	# Eyes stay upright and look the way the Cubit is facing
-	c.draw_set_transform(_shake_off + center, 0.0, Vector2(s * (1.0 if facing >= 0.0 else -1.0), s))
+	c.draw_set_transform(off + center, 0.0, Vector2(s * (1.0 if facing >= 0.0 else -1.0), s))
 	c.draw_rect(Rect2(-0.5, -4, 4, 5.5), Color(outline, 0.25))
 	c.draw_rect(Rect2(3, -4, 4, 5.5), Color(outline, 0.25))
 	c.draw_rect(Rect2(0.5, -3, 2, 3.5), outline)
 	c.draw_rect(Rect2(4, -3, 2, 3.5), outline)
-	c.draw_set_transform(_shake_off)
+	c.draw_set_transform(off)
 
 
 ## Closed outline of a rounded square (half-size `h`, corner radius `r`).
@@ -829,6 +839,8 @@ func _draw_level() -> void:
 		if active:
 			_glow(Vector2(p.x, r.position.y + 1.5), 24.0, UI.ORANGE, 0.5)
 			c.draw_rect(Rect2(r.position.x + 6, r.position.y, p.w - 12, 3), UI.ORANGE)
+		if p.has("label"):
+			_text(p.label, p.x, p.y - 12, UI.orbitron(800), 12, Color.WHITE if active else UI.CYAN, 1)
 
 	# 4. Airlock blast doors
 	for d in doors:
@@ -837,6 +849,8 @@ func _draw_level() -> void:
 		for hr in [Rect2(d_l - 4, d_t - 8, d.w + 8, 8), Rect2(d_l - 4, d_t + d.h, d.w + 8, 8)]:
 			c.draw_rect(hr, Color("#0a1626"))
 			c.draw_rect(hr, UI.CYAN, false, 1.0)
+		if d.has("needs"):
+			_text("NEEDS " + d.needs, d.x, d_t + d.h + 24, UI.mono(), 10, UI.TEXT_MUTED, 1)
 		var cur_h: float = d.h * (1.0 - d.open_amount)
 		if cur_h > 2.0:
 			c.draw_rect(Rect2(d_l, d_t, d.w, cur_h), Color("#06101c"))
@@ -902,6 +916,9 @@ func _draw_level() -> void:
 			status_color = UI.ORANGE
 	_text(status_text, 24, 70, UI.mono(), 12, status_color)
 
+	if data.get("hints", false):
+		_draw_tutorial_hint()
+
 	# Red death flash overlay
 	if player.is_dead:
 		c.draw_rect(Rect2(0, 0, CANVAS_W, CANVAS_H), Color(1, 30 / 255.0, 60 / 255.0, maxf(0.0, death_transition) * 0.7))
@@ -929,6 +946,40 @@ func _draw_portal_label() -> void:
 			_text(word, clampf(exit_pos.x, 8.0 + hw, CANVAS_W - 8.0 - hw), baseline + 14.0 * i, font, 11, UI.CYAN, 1)
 	else:
 		_text(label, exit_pos.x, baseline, font, 11, UI.CYAN, 1)
+
+
+## Tutorial step banner: tells the player the next thing to do.
+func _draw_tutorial_hint() -> void:
+	var d1: float = doors[0].x
+	var d2: float = doors[1].x
+	var step := ""
+	var color := UI.CYAN
+	if player.x > d2:
+		step = "7/7   Reach the EXTRACTION PORTAL."
+	elif player.x > d1:
+		if shadow.is_reversed:
+			step = "6/7   Your echo is walking back to PLATE A. Go through DOOR 2 when it opens."
+			color = UI.VIOLET
+		else:
+			step = "5/7   DOOR 2 needs PLATE A, but your echo already passed it. Press [F] to REVERSE."
+			color = UI.VIOLET
+	elif shadow.active:
+		step = "4/7   Wait. Your echo replays your steps; when it reaches PLATE B, DOOR 1 opens."
+		color = UI.ORANGE
+	elif touched.has("pB"):
+		step = "3/7   Walk up to DOOR 1 and press [SPACE] to deploy your echo."
+		color = UI.ORANGE
+	elif player.y > 450.0:
+		step = "2/7   Step on PLATE B."
+	else:
+		step = "1/7   Walk right over PLATE A, then drop off the ledge. It's too high to climb back."
+	var font := UI.mono()
+	var w := font.get_string_size(step, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x + 36.0
+	var r := Rect2(CANVAS_W / 2.0 - w / 2.0, 96, w, 34)
+	_canvas.draw_rect(r, Color(UI.MODAL_BG, 0.94))
+	_canvas.draw_rect(r, color, false, 1.0)
+	_canvas.draw_rect(Rect2(r.position, Vector2(4, r.size.y)), color)
+	_text(step, CANVAS_W / 2.0 + 2.0, r.position.y + 22, font, 13, UI.TEXT, 1)
 
 
 ## Canvas setLineDash circle: dashes laid along the arc starting at `rot`.
@@ -999,7 +1050,7 @@ func _input(event: InputEvent) -> void:
 		return
 	var code: Key = event.physical_keycode
 	if event.pressed:
-		if _modal.is_open():
+		if _popup_open():
 			return
 		if game_state == State.MENU:
 			if code == KEY_SPACE or code == KEY_ENTER:
@@ -1043,9 +1094,9 @@ func _on_canvas_input(event: InputEvent) -> void:
 			load_level(1, true)
 		elif in_x and p.y >= 515 and p.y <= 553:
 			game_state = State.PLAYING
-			load_level(0, false)
+			load_level(0, true)
 		elif in_x and p.y >= 565 and p.y <= 603:
-			_modal.open(MANUAL_TITLE, MANUAL_TEXT)
+			_guide.open("CLOSE [SPACE / ENTER]")
 	elif game_state == State.VICTORY:
 		if p.x >= CANVAS_W / 2.0 - 140 and p.x <= CANVAS_W / 2.0 + 140 and p.y >= 460 and p.y <= 508:
 			game_state = State.MENU
@@ -1057,7 +1108,7 @@ func _on_nav_menu() -> void:
 
 func _on_nav_tutorial() -> void:
 	game_state = State.PLAYING
-	load_level(0)
+	load_level(0, true)
 
 
 func _on_nav_restart() -> void:
