@@ -135,34 +135,43 @@ const LEVELS := [
 		"exit": [905, 500],
 	},
 	# LEVEL 3: REVELATION (THE ORIGINAL)
+	# Why reversal is mandatory (twice):
+	#  - Two one-way drops (150px each, jump ~133px): Plate A on the spawn
+	#    ledge, Plate C on the lower floor. Any recording touches A before C.
+	#  - Plate C opens Doors 1 AND 3; Plate A opens Door 2. The doors need
+	#    C, then A, then C again.
+	#  - Forward echo: A then C (only Door 1). One flip: back over C to A
+	#    (Door 2), but Door 3 needs C again after A, so a second flip sends the
+	#    echo forward to C. Forward-only or a single flip cannot finish.
+	#  - A void pit before the airlock must be jumped; Plate C is far from
+	#    the doors, so holding it yourself never gets you through.
 	{
 		"name": "LEVEL 3 - REVELATION",
 		"phase": "THE ORIGINAL",
-		"subtitle": "IDENTITY ERROR: YOU ARE THE ECHO.",
-		"spawn": [70, 520],
+		"subtitle": "ONE REVERSAL IS NOT ENOUGH.",
+		"spawn": [100, 233],
 		"solids": [
-			[0, 550, 960, 90, "#0a121e"],
-			[450, 0, 20, 470, "#0d1829"],
-			[670, 0, 20, 470, "#0d1829"],
-			[810, 0, 20, 470, "#0d1829"],
-			[130, 450, 100, 14, "#101c2e"],
-			[265, 360, 110, 14, "#101c2e"],
+			[0, 250, 180, 390, "#0c1626"],    # Spawn ledge (Plate A)
+			[180, 400, 170, 240, "#0c1626"],  # Middle step, 150px below
+			[350, 550, 170, 90, "#0a121e"],   # Lower floor (Plate C), 150px below
+			[600, 550, 360, 90, "#0a121e"],   # Airlock floor, past an 80px void pit
+			[650, 0, 270, 430, "#0d1829"],    # Airlock roof over Doors 1-3
 		],
 		"plates": [
-			{"id": "p1", "x": 160, "y": 546, "w": 48, "h": 12, "doors": ["d1", "d3"], "release_delay": 0.5},
-			{"id": "p2", "x": 320, "y": 356, "w": 48, "h": 12, "doors": ["d2"], "release_delay": 0.5},
+			{"id": "pA", "x": 140, "y": 246, "w": 48, "h": 12, "doors": ["d2"], "release_delay": 0.5},
+			{"id": "pC", "x": 470, "y": 546, "w": 48, "h": 12, "doors": ["d1", "d3"], "release_delay": 0.5},
 		],
 		"doors": [
-			{"id": "d1", "x": 460, "y": 510, "w": 16, "h": 80},
-			{"id": "d2", "x": 680, "y": 510, "w": 16, "h": 80},
-			{"id": "d3", "x": 820, "y": 510, "w": 16, "h": 80},
+			{"id": "d1", "x": 660, "y": 490, "w": 18, "h": 120},
+			{"id": "d2", "x": 770, "y": 490, "w": 18, "h": 120},
+			{"id": "d3", "x": 880, "y": 490, "w": 18, "h": 120},
 		],
 		"terminal": {
-			"x": 750, "y": 535,
+			"x": 60, "y": 235,
 			"title": "ARCHIVE 03: CLASSIFIED TRUTH",
-			"text": "ARCHIVE 03: SYSTEM RESET PURGED THE MASTER RECORD.\nTHE BLUE FORM IS AN EMISSION. YOU ARE THE ECHO.\nTHE RED SHADOW WAS YOU.",
+			"text": "ARCHIVE 03: SYSTEM RESET PURGED THE MASTER RECORD.\nTHE BLUE FORM IS AN EMISSION. YOU ARE THE ECHO.\nPLATE C SEALS TWO DOORS. ONE REVERSAL IS NOT ENOUGH: FLIP [F] AGAIN TO SEND YOUR ECHO FORWARD.",
 		},
-		"exit": [900, 510],
+		"exit": [912, 500],
 	},
 ]
 
@@ -907,8 +916,10 @@ func _draw_portal_label() -> void:
 			baseline = top + 15.0
 	var half_w := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x / 2.0
 	if exit_pos.x - half_w < 8.0 or exit_pos.x + half_w > CANVAS_W - 8.0:
-		_text("EXTRACTION", exit_pos.x, baseline, font, 11, UI.CYAN, 1)
-		_text("PORTAL", exit_pos.x, baseline + 14.0, font, 11, UI.CYAN, 1)
+		for i in 2:
+			var word: String = ["EXTRACTION", "PORTAL"][i]
+			var hw := font.get_string_size(word, HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x / 2.0
+			_text(word, clampf(exit_pos.x, 8.0 + hw, CANVAS_W - 8.0 - hw), baseline + 14.0 * i, font, 11, UI.CYAN, 1)
 	else:
 		_text(label, exit_pos.x, baseline, font, 11, UI.CYAN, 1)
 
