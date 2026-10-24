@@ -1,10 +1,13 @@
 ## Side-scrolling cybernetic player controller for SHADOW.exe.
 ## Features separate keys for jump vs deploy:
 ## - [W] / [Up Arrow]: Jump
-## - [SPACE] / [E]: Deploy Shadow Clone
+## - [SPACE]: Deploy Shadow Clone
 ## - [F] / [Q]: Shadow Flip
 ## Renders animated cyber-avatar sprite frames (from player.gif).
 extends CharacterBody2D
+
+const WebWorld := preload("res://scripts/web_world.gd")
+const UI := preload("res://scripts/ui_style.gd")
 
 const SPEED: float = 240.0
 const JUMP_VELOCITY: float = -480.0
@@ -16,6 +19,7 @@ const SAMPLE_RATE: float = 0.033
 
 var facing: float = 1.0
 var _time_alive: float = 0.0
+var _anim_timer: float = 0.0
 var _is_dying: bool = false
 
 # Preloaded animated GIF frame sequence
@@ -66,6 +70,7 @@ func _physics_process(delta: float) -> void:
 	if dir != 0.0:
 		velocity.x = dir * SPEED
 		facing = dir
+		_anim_timer += delta * 10.0
 	else:
 		velocity.x = move_toward(velocity.x, 0.0, SPEED * 8.0 * delta)
 
@@ -89,32 +94,26 @@ func _die() -> void:
 	_is_dying = true
 	AudioManager.play_death()
 	set_physics_process(false)
+	visible = false
+	var fx := get_tree().get_first_node_in_group("web_fx")
+	if fx:
+		fx.burst(global_position, UI.RED, 35, 60.0, 180.0, 3.0, 0.6)
+		fx.shake(12.0)
 	var hud := get_tree().root.find_child("HUD", true, false)
-	if hud and hud.has_method("show_message"):
+	if hud and hud.has_method("show_death"):
+		hud.show_death(0.7)
+	elif hud and hud.has_method("show_message"):
 		hud.show_message("CRITICAL CORRUPTION // SIGNAL LOST\nRESTARTING CYCLE...", 0.8)
-	get_tree().create_timer(0.65).timeout.connect(func(): GameData.restart_level())
+	get_tree().create_timer(0.7).timeout.connect(func(): GameData.restart_level())
 
 
 func _draw() -> void:
-	# Holographic floor ring
-	draw_arc(Vector2(0, 16), 16.0, 0.0, PI, 16, Color(0.0, 0.9, 1.0, 0.25), 1.5)
-
-	# Draw animated sprite frames
-	if not _anim_frames.is_empty():
-		var frame_idx: int = int(_time_alive * 10.0) % _anim_frames.size()
-		var tex: Texture2D = _anim_frames[frame_idx]
-		if tex:
-			var sz := tex.get_size()
-			# Apply horizontal flipping based on facing direction
-			draw_set_transform(Vector2.ZERO, 0.0, Vector2(facing, 1.0))
-			draw_texture(tex, -sz * 0.5)
-			draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-	else:
-		# Fallback cyber torso
-		var torso_pts := PackedVector2Array([
-			Vector2(-10, -18), Vector2(10, -18), Vector2(14, 0),
-			Vector2(8, 16), Vector2(-8, 16), Vector2(-14, 0),
-		])
-		draw_colored_polygon(torso_pts, Color(0.04, 0.1, 0.22, 0.95))
-		draw_polyline(torso_pts, Color(0.0, 0.9, 1.0, 0.85), 2.0)
-		draw_circle(Vector2(0, -2), 6.0, Color(0.0, 1.0, 1.0, 0.75))
+	# Web style: ~28px sprite with a cyan glow; animates only while running.
+	WebWorld.draw_glow(self, Vector2.ZERO, 22.0, Color(UI.CYAN, 0.35))
+	if _anim_frames.is_empty():
+		return
+	var moving := absf(velocity.x) > 1.0
+	var frame_idx: int = int(_anim_timer) % _anim_frames.size() if moving else 0
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2(facing * 0.7, 0.7))
+	draw_texture(_anim_frames[frame_idx], -_anim_frames[frame_idx].get_size() * 0.5)
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)

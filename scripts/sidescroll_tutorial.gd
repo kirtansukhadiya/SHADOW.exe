@@ -1,6 +1,8 @@
 ## Interactive step-by-step Tutorial Level for SHADOW.exe.
 extends Node2D
 
+const WebWorld := preload("res://scripts/web_world.gd")
+
 @onready var player: CharacterBody2D = $SidescrollPlayer
 @onready var shadow: Node2D = $SidescrollShadow
 @onready var plate1: Area2D = $Plate1
@@ -14,6 +16,7 @@ var _flash_timer: float = 0.0
 
 
 func _ready() -> void:
+	WebWorld.setup_level(self)
 	for child in get_children():
 		if child is Area2D and child.has_method("set_shadow_present"):
 			_plates.append(child as Area2D)
@@ -55,7 +58,7 @@ func _process(delta: float) -> void:
 	if player and hud:
 		var px := player.global_position.x
 		if px > 260.0 and px < 500.0:
-			hud.set_shadow_status("STEP 2: Climb to Plate 1 -> return below. Press [SPACE]/[E] to deploy shadow.")
+			hud.set_shadow_status("STEP 2: Climb to Plate 1 -> return below. Press [SPACE] to deploy shadow.")
 		elif px >= 560.0 and px < 700.0:
 			hud.set_shadow_status("STEP 3: Inside airlock! Press [F] for SHADOW FLIP to reverse clone to Plate 2!")
 
@@ -93,15 +96,4 @@ func _on_flip() -> void:
 
 
 func _draw() -> void:
-	var total_w := 960.0
-	var total_h := 640.0
-	draw_rect(Rect2(0, 0, total_w, total_h), Color(0.015, 0.02, 0.04, 1.0), true)
-
-	for y in range(60, 640, 40):
-		draw_line(Vector2(0, float(y)), Vector2(total_w, float(y)), Color(0.0, 0.85, 1.0, 0.04), 1.0)
-	for x in range(40, 960, 40):
-		draw_line(Vector2(float(x), 0), Vector2(float(x), total_h), Color(0.0, 0.85, 1.0, 0.04), 1.0)
-
-	if _flash_timer > 0.0:
-		var alpha: float = (_flash_timer / 0.25) * 0.35
-		draw_rect(Rect2(0, 0, total_w, total_h), Color(1.0, 0.3, 0.8, alpha), true)
+	WebWorld.draw_level(self)

@@ -231,6 +231,7 @@ script = ExtResource("6_exit")
 [node name="StoryTerminal" type="Area2D" parent="."]
 position = Vector2(150, 550)
 script = ExtResource("8_term")
+terminal_label = "ARCHIVE 01: SYSTEM AWAKENING"
 story_text = "ARCHIVE 01: SUBJECT AWAKENED IN CORRUPTED SECTOR 1.
 FALLING INTO THE VOID WILL RESTART YOUR SEQUENCE.
 COOPERATE WITH YOUR PAST: DEPLOY [SPACE] FOR DOOR 1, THEN FLIP [F] FOR DOOR 2!"

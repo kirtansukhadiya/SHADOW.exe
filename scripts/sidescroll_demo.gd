@@ -1,6 +1,8 @@
 ## Master controller for the Side-Scroll Protocol demo in SHADOW.exe.
 extends Node2D
 
+const WebWorld := preload("res://scripts/web_world.gd")
+
 @onready var player: CharacterBody2D = $SidescrollPlayer
 @onready var shadow: Node2D = $SidescrollShadow
 @onready var plate1: Area2D = $Plate1
@@ -14,6 +16,7 @@ var _completed: bool = false
 
 
 func _ready() -> void:
+	WebWorld.setup_level(self)
 	if hud and hud.has_method("set_level_name"):
 		hud.set_level_name("DEMO: SIDE-SCROLL PROTOCOL")
 		hud.set_shadow_status("Jump up [W] to Plate 1 -> return below. Deploy [SPACE], pass Door 1, FLIP [F] for Door 2!")
@@ -76,13 +79,4 @@ func _on_flip() -> void:
 
 
 func _draw() -> void:
-	# Sci-fi digital backdrop grid
-	var total_w := 960.0
-	var total_h := 640.0
-	draw_rect(Rect2(0, 0, total_w, total_h), Color(0.015, 0.02, 0.04, 1.0), true)
-
-	# Subtle neon horizontal perspective grid lines
-	for y in range(80, 640, 40):
-		draw_line(Vector2(0, float(y)), Vector2(total_w, float(y)), Color(0.0, 0.8, 1.0, 0.05), 1.0)
-	for x in range(40, 960, 40):
-		draw_line(Vector2(float(x), 0), Vector2(float(x), total_h), Color(0.0, 0.8, 1.0, 0.05), 1.0)
+	WebWorld.draw_level(self)

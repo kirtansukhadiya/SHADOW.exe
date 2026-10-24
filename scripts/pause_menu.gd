@@ -1,6 +1,8 @@
 extends CanvasLayer
 ## Pause menu overlay for SHADOW.exe. Handles pause/unpause and navigation.
 
+const UI := preload("res://scripts/ui_style.gd")
+
 var is_paused: bool = false
 
 @onready var overlay: ColorRect = $Overlay
@@ -15,7 +17,27 @@ func _ready() -> void:
 	resume_button.pressed.connect(_on_resume_pressed)
 	restart_button.pressed.connect(_on_restart_pressed)
 	quit_button.pressed.connect(_on_quit_pressed)
+	_apply_web_style()
 	_set_visible(false)
+
+
+func _apply_web_style() -> void:
+	overlay.color = Color(1 / 255.0, 4 / 255.0, 8 / 255.0, 0.88)
+	var title: Label = $VBoxContainer/PausedLabel
+	title.add_theme_font_override("font", UI.orbitron(900))
+	title.add_theme_color_override("font_color", UI.CYAN)
+	UI.glow(title, UI.CYAN, 14)
+	for b: Button in [resume_button, restart_button, quit_button]:
+		b.custom_minimum_size = Vector2(300, 40)
+		UI.style_menu_button(b, UI.CYAN)
+	UI.style_menu_button(restart_button, UI.ORANGE)
+	UI.style_menu_button(quit_button, UI.TEXT_MUTED)
+	# Focus styling is disabled by style_menu_button; restore keyboard focus for this menu.
+	for b: Button in [resume_button, restart_button, quit_button]:
+		b.focus_mode = Control.FOCUS_ALL
+		var f := UI.box(Color.TRANSPARENT, Color.WHITE, 1, 0)
+		f.draw_center = false
+		b.add_theme_stylebox_override("focus", f)
 
 
 func _unhandled_input(event: InputEvent) -> void:

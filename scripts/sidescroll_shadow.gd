@@ -4,6 +4,9 @@
 ## - ghost_reverse.gif frames when in Shadow Flip (reversal)
 extends Node2D
 
+const WebWorld := preload("res://scripts/web_world.gd")
+const UI := preload("res://scripts/ui_style.gd")
+
 var replay_path: Array[Vector2] = []
 var current_step: float = 0.0
 var is_replaying: bool = false
@@ -11,8 +14,8 @@ var is_reversed: bool = false
 var replay_speed: float = 30.0
 
 var _time_alive: float = 0.0
-var _jitter: Vector2 = Vector2.ZERO
-var _trail: Array[Vector2] = []
+var _facing: float = 1.0
+var _moving: bool = false
 
 var _frames_forward: Array[Texture2D] = []
 var _frames_reverse: Array[Texture2D] = []
@@ -38,10 +41,12 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	_time_alive += delta
 
-	if randf() < 0.2:
-		_jitter = Vector2(randf_range(-1.5, 1.5), randf_range(-1.0, 1.0))
-	else:
-		_jitter = Vector2.ZERO
+	# Trail particles drifting off the clone (web updateShadow).
+	if visible and randf() < 0.4:
+		var fx := get_tree().get_first_node_in_group("web_fx")
+		if fx:
+			fx.add(global_position + Vector2(randf_range(-5, 5), randf_range(-8, 8)),
+				Vector2(-_facing * 10.0, -15.0), _color(), 2.5, 0.4)
 
 	if not is_replaying or replay_path.is_empty():
 		queue_redraw()
@@ -59,11 +64,12 @@ func _process(delta: float) -> void:
 			is_replaying = false
 
 	var idx: int = clampi(int(current_step), 0, replay_path.size() - 1)
+	var prev := global_position
 	global_position = replay_path[idx]
-
-	_trail.append(global_position)
-	if _trail.size() > 5:
-		_trail.remove_at(0)
+	var dx := global_position.x - prev.x
+	_moving = absf(dx) > 0.1
+	if _moving:
+		_facing = signf(dx)
 
 	queue_redraw()
 
@@ -75,7 +81,6 @@ func start_replay(path: Array[Vector2], start_in_reverse: bool = false) -> void:
 	is_reversed = start_in_reverse
 	visible = true
 	is_replaying = true
-	_trail.clear()
 
 	if not is_reversed:
 		current_step = 0.0
@@ -84,6 +89,11 @@ func start_replay(path: Array[Vector2], start_in_reverse: bool = false) -> void:
 
 	global_position = replay_path[int(current_step)]
 
+	# Deployment shockwave (web: 20 radial orange particles).
+	var fx := get_tree().get_first_node_in_group("web_fx")
+	if fx:
+		fx.burst(replay_path[0], UI.ORANGE, 20, 80.0, 140.0, 3.0, 0.5, true)
+
 
 func flip() -> void:
 	if replay_path.is_empty():
@@ -91,30 +101,33 @@ func flip() -> void:
 	is_reversed = !is_reversed
 	is_replaying = true
 	AudioManager.play_shadow_flip()
+	var fx := get_tree().get_first_node_in_group("web_fx")
+	if fx:
+		fx.burst(global_position, _color(), 30, 90.0, 180.0, 4.0, 0.6)
+		fx.shake(6.0)
 	shadow_flipped.emit(is_reversed)
+
+
+func _color() -> Color:
+	return UI.VIOLET if is_reversed else UI.ORANGE
 
 
 func _draw() -> void:
 	if not visible:
 		return
+	var col := _color()
+	WebWorld.draw_glow(self, Vector2.ZERO, 22.0, Color(col, 0.4))
 
-	var is_flip := is_reversed
-	var main_col := Color(1.0, 0.15, 0.45) if not is_flip else Color(1.0, 0.6, 0.1)
+	var frames := _frames_reverse if is_reversed else _frames_forward
+	if not frames.is_empty():
+		var frame_idx: int = int(_time_alive * 10.0) % frames.size() if _moving else 0
+		var tex := frames[frame_idx]
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2(_facing * 0.7, 0.7))
+		draw_texture(tex, -tex.get_size() * 0.5)
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
-	# 1. Glitch trail
-	for i in range(_trail.size()):
-		var local := _trail[i] - global_position
-		var alpha := 0.08 + float(i) * 0.08
-		draw_rect(Rect2(local - Vector2(8, 12), Vector2(16, 24)), Color(main_col.r, main_col.g, main_col.b, alpha), false, 1.5)
-
-	# 2. Select appropriate animated GIF frames
-	var active_frames := _frames_reverse if is_flip else _frames_forward
-	if not active_frames.is_empty():
-		var frame_idx: int = int(_time_alive * 10.0) % active_frames.size()
-		var tex: Texture2D = active_frames[frame_idx]
-		if tex:
-			var sz := tex.get_size()
-			draw_texture(tex, -sz * 0.5 + _jitter)
-	else:
-		# Fallback polygon
-		draw_circle(Vector2.ZERO + _jitter, 16.0, main_col)
+	# Name tag
+	var tag := "<< REVERSED SHADOW" if is_reversed else "ECHO SHADOW >>"
+	var font := UI.mono()
+	var w := font.get_string_size(tag, HORIZONTAL_ALIGNMENT_LEFT, -1, 10).x
+	draw_string(font, Vector2(-w / 2.0, -24.0), tag, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, col)

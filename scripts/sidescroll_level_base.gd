@@ -3,6 +3,8 @@
 ## narrative story prompts, and level progression.
 extends Node2D
 
+const WebWorld := preload("res://scripts/web_world.gd")
+
 @export var level_phase_name: String = "PHASE 1 - DISCOVERY"
 @export var level_subtitle: String = "ECHO DETECTED. REVERSE SYNCHRONIZATION ACTIVE."
 @export var level_hint: String = "Jump [W] to plate -> return below. Deploy [SPACE], then proceed."
@@ -18,6 +20,7 @@ var _flash_timer: float = 0.0
 
 
 func _ready() -> void:
+	WebWorld.setup_level(self)
 	_player = get_node_or_null("SidescrollPlayer") as CharacterBody2D
 	_shadow = get_node_or_null("SidescrollShadow") as Node2D
 	_exit = get_node_or_null("ExitZone") as Node2D
@@ -96,19 +99,4 @@ func _on_flip() -> void:
 
 
 func _draw() -> void:
-	var total_w := 960.0
-	var total_h := 640.0
-
-	# Dark sci-fi background
-	draw_rect(Rect2(0, 0, total_w, total_h), Color(0.015, 0.02, 0.04, 1.0), true)
-
-	# Ambient digital grid lines
-	for y in range(60, 640, 40):
-		draw_line(Vector2(0, float(y)), Vector2(total_w, float(y)), Color(0.0, 0.85, 1.0, 0.04), 1.0)
-	for x in range(40, 960, 40):
-		draw_line(Vector2(float(x), 0), Vector2(float(x), total_h), Color(0.0, 0.85, 1.0, 0.04), 1.0)
-
-	# Temporal reversal flash
-	if _flash_timer > 0.0:
-		var alpha: float = (_flash_timer / 0.25) * 0.35
-		draw_rect(Rect2(0, 0, total_w, total_h), Color(1.0, 0.3, 0.8, alpha), true)
+	WebWorld.draw_level(self)

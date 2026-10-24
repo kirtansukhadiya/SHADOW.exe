@@ -168,6 +168,7 @@ script = ExtResource("6_exit")
 [node name="StoryTerminal" type="Area2D" parent="."]
 position = Vector2(620, 550)
 script = ExtResource("8_term")
+terminal_label = "ARCHIVE 02: SIGNAL ANOMALY"
 story_text = "ARCHIVE 02: WARNING: THE SIGNAL YOU ARE TRACING DOES NOT ORIGINATE FROM YOU.
 WHO IS THE ARCHIVE, AND WHO IS THE PROGRAM?"
 

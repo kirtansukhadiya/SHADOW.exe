@@ -3,6 +3,9 @@
 ## Includes a generous release buffer timer so doors remain accessible.
 extends Area2D
 
+const WebWorld := preload("res://scripts/web_world.gd")
+const UI := preload("res://scripts/ui_style.gd")
+
 @export var linked_door_path: NodePath
 @export var linked_door_2_path: NodePath
 @export var release_delay: float = 0.5
@@ -62,10 +65,11 @@ func _set_pressed(pressed: bool) -> void:
 
 
 func _draw() -> void:
-	var col := Color(0.0, 1.0, 0.45, 0.9) if is_pressed else Color(0.0, 0.9, 1.0, 0.6)
-	draw_rect(Rect2(-24, -4, 48, 8), Color(0.05, 0.1, 0.2, 0.9), true)
-	draw_rect(Rect2(-24, -4, 48, 8), col, false, 2.0)
+	# Web style: navy plate with cyan outline; pressed = sunk 4px, amber with orange glow.
+	var press := 4.0 if is_pressed else 0.0
+	var r := Rect2(-24, -6 + press, 48, 12 - press)
+	draw_rect(r, Color("#ffaa00") if is_pressed else Color("#142336"))
+	draw_rect(r, Color.WHITE if is_pressed else UI.CYAN, false, 2.0)
 	if is_pressed:
-		var fill_ratio: float = clampf(_release_timer / release_delay, 0.0, 1.0) if (_occupants == 0 and not _shadow_present) else 1.0
-		var w := 40.0 * fill_ratio
-		draw_rect(Rect2(-w * 0.5, -2, w, 4), col, true)
+		WebWorld.draw_glow(self, Vector2(0, r.position.y + 1.5), 26.0, Color(UI.ORANGE, 0.45))
+		draw_rect(Rect2(-18, r.position.y, 36, 3), UI.ORANGE)
