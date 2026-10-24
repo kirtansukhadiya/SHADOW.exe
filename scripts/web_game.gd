@@ -141,51 +141,47 @@ const LEVELS := [
 		},
 		"exit": [905, 500],
 	},
-	# LEVEL 3: REVELATION (THE ORIGINAL)
-	# THE MASTER REVERSAL PUZZLE (ONE-WAY HALFWAY DROP):
-	# Level is split into FIRST HALF (x: 0-450, y: 320) and SECOND HALF (x: 450-960, y: 550).
-	# At x = 450, there is a massive 230px ONE-WAY drop.
-	# After dropping into the second half, jump limitations (max ~75px) make it 100% IMPOSSIBLE to go back!
-	#
-	# - Plate 1 is in FIRST HALF at (180, 306) -> Opens Door 3 (Final Exit Door at x=860).
-	# - Plate 2 is in SECOND HALF at (520, 536) -> Opens Door 1 (Outer Airlock at x=700).
-	# - Plate 3 is in SECOND HALF at (630, 466) -> Opens Door 2 (Inner Airlock at x=780).
-	#
-	# Forward replay starts at Plate 1, drops down to Plate 2 and Plate 3, and terminates at Door 1.
-	# The player enters Chamber 2 and is blocked by Door 3.
-	# The forward shadow is stuck at the bottom in the second half and CANNOT jump 230px back up.
-	# The ONLY way to reach Plate 1 and open Door 3 is to press [F] (SHADOW FLIP):
-	# The shadow time-reverses, leaps backward up the 230px cliff against gravity into the first half,
-	# and steps onto Plate 1, opening Door 3 to the Extraction Portal!
+	# LEVEL 3: REVELATION (THE ORIGINAL) - "Halfway Divide", hardest sector.
+	# Why it needs TWO flips:
+	#  - The level splits at a 230px one-way drop (jump ~133px). Plate A is in
+	#    the top half, so the echo can only reach it at the start of its path
+	#    or by walking the path backwards.
+	#  - Door 1 <- Plate C (just below the drop), Door 2 <- Plate A (top half),
+	#    Door 3 <- Plate B (on a pillar past the void pit). The doors need
+	#    C, A, B: forward to C, flip back to A, flip forward again to B.
+	#  - Every plate uses the normal 0.5s release and sits far from its door,
+	#    so none can be held by the player while running through.
+	#  - Extra execution: drop at full speed and you roll into the pit; the pit
+	#    and the pillar must be jumped while recording.
 	{
 		"name": "LEVEL 3 - REVELATION",
 		"phase": "THE ORIGINAL",
-		"subtitle": "HALFWAY DIVIDE: 230px DROP // REVERSAL FLIP MANDATORY",
+		"subtitle": "HALFWAY DIVIDE: ONE REVERSAL IS NOT ENOUGH.",
 		"spawn": [70, 304],
 		"solids": [
-			[0, 320, 450, 320, "#0c1626"],    # First Half Ground (y=320)
-			[0, 0, 400, 180, "#0d1829"],      # First Half Roof
-			[410, 0, 60, 240, "#0d1829"],     # Halfway Chute Overhang
-			[450, 550, 510, 90, "#0a121e"],   # Second Half Floor (y=550)
-			[590, 480, 80, 70, "#101c2e"],    # Second Half Step Pillar
-			[690, 0, 230, 430, "#0d1829"],    # Airlock Bulkhead
+			[0, 320, 360, 320, "#0c1626"],    # First half ground (y=320)
+			[342, 0, 40, 240, "#0d1829"],     # Halfway chute overhang
+			[360, 550, 200, 90, "#0a121e"],   # Landing floor (Plate C), 230px below
+			[620, 550, 340, 90, "#0a121e"],   # Airlock floor, past a 60px void pit
+			[650, 480, 60, 70, "#101c2e"],    # Pillar (Plate B)
+			[750, 0, 140, 430, "#0d1829"],    # Airlock bulkhead over Doors 1-3
 		],
 		"plates": [
-			{"id": "p1", "x": 180, "y": 306, "w": 48, "h": 12, "doors": ["d3"], "release_delay": 2.5},
-			{"id": "p2", "x": 520, "y": 536, "w": 48, "h": 12, "doors": ["d1"], "release_delay": 1.2},
-			{"id": "p3", "x": 630, "y": 466, "w": 48, "h": 12, "doors": ["d2"], "release_delay": 1.2},
+			{"id": "pA", "x": 180, "y": 306, "w": 48, "h": 12, "doors": ["d2"], "release_delay": 0.5},
+			{"id": "pC", "x": 420, "y": 546, "w": 48, "h": 12, "doors": ["d1"], "release_delay": 0.5},
+			{"id": "pB", "x": 680, "y": 466, "w": 48, "h": 12, "doors": ["d3"], "release_delay": 0.5},
 		],
 		"doors": [
-			{"id": "d1", "x": 700, "y": 490, "w": 18, "h": 120},
-			{"id": "d2", "x": 780, "y": 490, "w": 18, "h": 120},
-			{"id": "d3", "x": 860, "y": 490, "w": 18, "h": 120},
+			{"id": "d1", "x": 760, "y": 490, "w": 18, "h": 120},
+			{"id": "d2", "x": 820, "y": 490, "w": 18, "h": 120},
+			{"id": "d3", "x": 880, "y": 490, "w": 18, "h": 120},
 		],
 		"terminal": {
-			"x": 310, "y": 305,
+			"x": 300, "y": 305,
 			"title": "ARCHIVE 03: THE TEMPORAL DIVIDE",
-			"text": "CRITICAL ALERT: 0.00% BIOLOGICAL RESIDUE DETECTED.\nIDENTITY AUDIT: YOU ARE NOT THE ORIGINAL ESCAPEE. YOU ARE THE ECHO.\nHALFWAY DROP IS ONE-WAY (230px DROP: JUMP LIMITATIONS PREVENT RETURN).\nPASS THE DIVIDE, RECORD TO DOOR 1, THEN USE SHADOW FLIP [F] TO REVERSE TIME!",
+			"text": "CRITICAL ALERT: 0.00% BIOLOGICAL RESIDUE DETECTED.\nIDENTITY AUDIT: YOU ARE NOT THE ORIGINAL ESCAPEE. YOU ARE THE ECHO.\nTHE HALFWAY DROP IS ONE-WAY. WATCH YOUR LANDING: THE VOID IS CLOSE.\nTHE AIRLOCK WANTS THE LOWER PLATE, THEN THE UPPER, THEN THE PILLAR. ONE REVERSAL IS NOT ENOUGH: FLIP [F] TWICE.",
 		},
-		"exit": [915, 505],
+		"exit": [920, 500],
 	},
 ]
 
