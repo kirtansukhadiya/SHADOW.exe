@@ -143,45 +143,50 @@ const LEVELS := [
 	},
 	# LEVEL 3: REVELATION (THE ORIGINAL) - "Halfway Divide", hardest sector.
 	# Why it needs TWO flips:
-	#  - The level splits at a 230px one-way drop (jump ~133px). Plate A is in
-	#    the top half, so the echo can only reach it at the start of its path
-	#    or by walking the path backwards.
-	#  - Door 1 <- Plate C (just below the drop), Door 2 <- Plate A (top half),
-	#    Door 3 <- Plate B (on a pillar past the void pit). The doors need
-	#    C, A, B: forward to C, flip back to A, flip forward again to B.
-	#  - Every plate uses the normal 0.5s release and sits far from its door,
-	#    so none can be held by the player while running through.
-	#  - Extra execution: drop at full speed and you roll into the pit; the pit
-	#    and the pillar must be jumped while recording.
+	#  - A 230px one-way drop splits the level (jump ~133px). Plate A is in the
+	#    top half, so the echo only reaches it at the start of its path or by
+	#    walking the path backwards.
+	#  - Door 1 <- Plate C (below the drop), Door 2 <- Plate A (top half),
+	#    Door 3 <- Plate B (across the chasm). The airlock sits on a high ledge
+	#    reached only by the lift, and the doors need C, A, B: forward to C,
+	#    flip back to A, flip forward again to B.
+	#  - Normal 0.5s plate timers; every plate is a lift ride away from its door.
+	# Execution: drop carefully (full speed lands in the chasm), ride the sliding
+	# platform across a 310px chasm, then catch the lift up to the airlock.
 	{
 		"name": "LEVEL 3 - REVELATION",
 		"phase": "THE ORIGINAL",
-		"subtitle": "HALFWAY DIVIDE: ONE REVERSAL IS NOT ENOUGH.",
+		"subtitle": "HALFWAY DIVIDE: RIDE THE PLATFORMS. ONE REVERSAL IS NOT ENOUGH.",
 		"spawn": [70, 304],
 		"solids": [
 			[0, 320, 360, 320, "#0c1626"],    # First half ground (y=320)
 			[342, 0, 40, 240, "#0d1829"],     # Halfway chute overhang
-			[360, 550, 200, 90, "#0a121e"],   # Landing floor (Plate C), 230px below
-			[620, 550, 340, 90, "#0a121e"],   # Airlock floor, past a 60px void pit
-			[650, 480, 60, 70, "#101c2e"],    # Pillar (Plate B)
-			[750, 0, 140, 430, "#0d1829"],    # Airlock bulkhead over Doors 1-3
+			[360, 550, 110, 90, "#0a121e"],   # Landing floor (Plate C), 230px below
+			[780, 550, 100, 90, "#0a121e"],   # Far floor (Plate B), across a 310px chasm
+			[560, 260, 320, 20, "#0d1829"],   # High airlock ledge (lift only)
+			[660, 0, 180, 140, "#0d1829"],    # Airlock bulkhead over Doors 1-3
+		],
+		# Moving platforms: base rect [x, y, w, h], travel [dx, dy], period (s).
+		"movers": [
+			{"rect": [475, 550, 80, 14], "travel": [225, 0], "period": 4.5},     # Sliding platform over the chasm
+			{"rect": [880, 556, 70, 14], "travel": [0, -302], "period": 6.0},    # Lift to the airlock ledge
 		],
 		"plates": [
 			{"id": "pA", "x": 180, "y": 306, "w": 48, "h": 12, "doors": ["d2"], "release_delay": 0.5},
-			{"id": "pC", "x": 420, "y": 546, "w": 48, "h": 12, "doors": ["d1"], "release_delay": 0.5},
-			{"id": "pB", "x": 680, "y": 466, "w": 48, "h": 12, "doors": ["d3"], "release_delay": 0.5},
+			{"id": "pC", "x": 410, "y": 546, "w": 48, "h": 12, "doors": ["d1"], "release_delay": 0.5},
+			{"id": "pB", "x": 820, "y": 546, "w": 48, "h": 12, "doors": ["d3"], "release_delay": 0.5},
 		],
 		"doors": [
-			{"id": "d1", "x": 760, "y": 490, "w": 18, "h": 120},
-			{"id": "d2", "x": 820, "y": 490, "w": 18, "h": 120},
-			{"id": "d3", "x": 880, "y": 490, "w": 18, "h": 120},
+			{"id": "d1", "x": 820, "y": 200, "w": 18, "h": 120},
+			{"id": "d2", "x": 750, "y": 200, "w": 18, "h": 120},
+			{"id": "d3", "x": 680, "y": 200, "w": 18, "h": 120},
 		],
 		"terminal": {
 			"x": 300, "y": 305,
 			"title": "ARCHIVE 03: THE TEMPORAL DIVIDE",
-			"text": "CRITICAL ALERT: 0.00% BIOLOGICAL RESIDUE DETECTED.\nIDENTITY AUDIT: YOU ARE NOT THE ORIGINAL ESCAPEE. YOU ARE THE ECHO.\nTHE HALFWAY DROP IS ONE-WAY. WATCH YOUR LANDING: THE VOID IS CLOSE.\nTHE AIRLOCK WANTS THE LOWER PLATE, THEN THE UPPER, THEN THE PILLAR. ONE REVERSAL IS NOT ENOUGH: FLIP [F] TWICE.",
+			"text": "CRITICAL ALERT: 0.00% BIOLOGICAL RESIDUE DETECTED.\nIDENTITY AUDIT: YOU ARE NOT THE ORIGINAL ESCAPEE. YOU ARE THE ECHO.\nTHE HALFWAY DROP IS ONE-WAY. RIDE THE SLIDING PLATFORM ACROSS THE CHASM, THEN TAKE THE LIFT UP TO THE AIRLOCK.\nTHE AIRLOCK WANTS THE LOWER PLATE, THEN THE UPPER, THEN THE FAR ONE. ONE REVERSAL IS NOT ENOUGH: FLIP [F] TWICE.",
 		},
-		"exit": [920, 500],
+		"exit": [592, 210],
 	},
 ]
 
@@ -210,6 +215,8 @@ var coyote_timer: float = 0.0
 var jump_buffer_timer: float = 0.0
 var shadow: Dictionary
 var complete: bool = false
+var movers: Array[Dictionary] = []  # moving platforms: base, travel, period, rect
+var level_time: float = 0.0
 var touched: Dictionary = {}  # plate ids the player has stood on (tutorial hints)
 
 # --- NODES ---
@@ -468,6 +475,11 @@ func load_level(idx: int, show_briefing: bool = false) -> void:
 		var c: Dictionary = d.duplicate(true)
 		c.open_amount = 0.0
 		doors.append(c)
+	movers.clear()
+	for m in data.get("movers", []):
+		var base := Rect2(m.rect[0], m.rect[1], m.rect[2], m.rect[3])
+		movers.append({"base": base, "travel": Vector2(m.travel[0], m.travel[1]), "period": float(m.period), "rect": base})
+	level_time = 0.0
 	terminal = data.terminal
 	exit_pos = Vector2(data.exit[0], data.exit[1])
 	exit_rot = 0.0
@@ -506,6 +518,7 @@ func restart_level() -> void:
 func _update(dt: float) -> void:
 	if player.is_dead:
 		return
+	_update_movers(dt)
 
 	# 1. Player physics & controls
 	var move_dir := 0.0
@@ -566,8 +579,26 @@ func _update(dt: float) -> void:
 	exit_rot += dt * 2.0
 
 
+## Moving platforms ease back and forth along their travel. A player standing
+## on one is carried with it.
+func _update_movers(dt: float) -> void:
+	level_time += dt
+	for m in movers:
+		var old: Rect2 = m.rect
+		var phase := 0.5 - 0.5 * cos(TAU * level_time / m.period)
+		var now := Rect2(m.base.position + m.travel * phase, m.base.size)
+		m.rect = now
+		var riding: bool = player.on_ground and absf(player.y + PLAYER_H / 2.0 - old.position.y) < 1.5 \
+			and player.x + HIT_HW_FLOOR > old.position.x and player.x - HIT_HW_FLOOR < old.end.x
+		if riding:
+			player.x += now.position.x - old.position.x
+			player.y += now.position.y - old.position.y
+
+
 func _all_solids() -> Array[Rect2]:
 	var all := solids.duplicate()
+	for m in movers:
+		all.append(m.rect)
 	for d in doors:
 		if d.open_amount < 0.8:
 			all.append(Rect2(d.x - d.w / 2.0, d.y - d.h / 2.0, d.w, d.h))
@@ -939,6 +970,24 @@ func _draw_level() -> void:
 		c.draw_rect(b, solid_colors[i])
 		c.draw_rect(b, UI.CYAN, false, 1.5)
 		c.draw_line(b.position, Vector2(b.end.x, b.position.y), UI.CYAN, 2.5)
+
+	# Moving platforms: dashed rail showing the travel, then the platform
+	for m in movers:
+		var a: Vector2 = m.base.get_center()
+		var b2: Vector2 = a + m.travel
+		var seg := 8.0
+		var total := a.distance_to(b2)
+		var k := 0.0
+		while k < total:
+			c.draw_line(a.lerp(b2, k / total), a.lerp(b2, minf(k + seg * 0.5, total) / total), Color(UI.CYAN, 0.25), 1.0)
+			k += seg
+		var r: Rect2 = m.rect
+		c.draw_rect(r, Color("#12324a"))
+		c.draw_rect(r, UI.CYAN, false, 1.5)
+		c.draw_line(r.position, Vector2(r.end.x, r.position.y), Color.WHITE, 2.5)
+		for chev in [r.position.x + r.size.x * 0.3, r.position.x + r.size.x * 0.7]:
+			c.draw_line(Vector2(chev - 3, r.position.y + 4), Vector2(chev, r.position.y + r.size.y - 4), Color(UI.CYAN, 0.6), 1.0)
+			c.draw_line(Vector2(chev + 3, r.position.y + 4), Vector2(chev, r.position.y + r.size.y - 4), Color(UI.CYAN, 0.6), 1.0)
 
 	# 3. Pressure plates
 	for p in plates:
