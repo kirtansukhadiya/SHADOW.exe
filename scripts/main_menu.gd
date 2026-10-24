@@ -13,7 +13,7 @@ const CARD_W := 240.0
 const CARD_H := 150.0
 const CARD_GAP := 20.0
 
-const MANUAL_TITLE := "SHADOW.exe MANUAL // REVERSAL PROTOCOL"
+const MANUAL_TITLE := "SHADOW FLIP MANUAL // REVERSAL PROTOCOL"
 const MANUAL_TEXT := "MISSION DIRECTIVE:\n" \
 	+ "1. [W] or [UP] to JUMP. Space is strictly for Shadow clone deployment.\n" \
 	+ "2. Walk across pressure plates to open security blast doors.\n" \
@@ -23,9 +23,9 @@ const MANUAL_TEXT := "MISSION DIRECTIVE:\n" \
 
 # [color, tag, title, spritesheet row]
 const CARDS := [
-	[UI.CYAN, "CYBER PROJECTION", "PLAYER", 0],
-	[UI.ORANGE, "PAST RECORDING", "ECHO CLONE", 1],
-	[UI.VIOLET, "REVERSED SIGNAL", "SHADOW FLIP", 2],
+	[UI.CYAN, "CYBER PROJECTION", "ECHO", 0],
+	[UI.ORANGE, "PAST RECORDING", "SHADOW", 1],
+	[UI.VIOLET, "REVERSED SIGNAL", "REVERSE SHADOW", 2],
 ]
 
 var _time: float = 0.0
@@ -42,10 +42,9 @@ func _ready() -> void:
 			row.append(load("res://assets/art/%s_%d.png" % [set_name, f]))
 		_frames.append(row)
 
-	_title = _centered_label("SHADOW.exe", UI.orbitron(900), 48, UI.CYAN, 120)
+	_title = _centered_label("SHADOW FLIP", UI.orbitron(900), 48, UI.CYAN, 120)
 	UI.glow(_title, UI.CYAN, 10)
 	_centered_label("\"Your shadow remembers everything you regret.\"", UI.mono(), 16, UI.ORANGE, 155)
-	_centered_label("HACKATHON THEME REQUIREMENT: REVERSAL PROTOCOL", UI.mono(), 13, Color(UI.CYAN, 0.7), 180)
 
 	for i in CARDS.size():
 		var c: Array = CARDS[i]
@@ -56,8 +55,7 @@ func _ready() -> void:
 	_centered_label("PRESS [SPACE] OR CLICK BELOW TO INITIALIZE", UI.orbitron(600), 18, Color.WHITE, 430)
 
 	_add_button("▶ START CAMPAIGN (LEVEL 1)", UI.CYAN, 460, 44, _on_start_pressed)
-	_add_button("📖 TUTORIAL PROTOCOL", UI.ORANGE, 515, 38, _on_tutorial_pressed)
-	_add_button("⚡ STORY ARCHIVES & MANUAL", UI.TEXT_MUTED, 565, 38, _on_manual_pressed)
+	_add_button("📖 TUTORIAL", UI.ORANGE, 515, 38, _on_tutorial_pressed)
 
 	# Extras the web build doesn't have: top-down archive and quit.
 	var extras := HBoxContainer.new()
