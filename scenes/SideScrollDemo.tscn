@@ -1,0 +1,125 @@
+[gd_scene load_steps=12 format=3]
+
+[ext_resource type="Script" path="res://scripts/sidescroll_demo.gd" id="1_demo"]
+[ext_resource type="Script" path="res://scripts/sidescroll_player.gd" id="2_player"]
+[ext_resource type="Script" path="res://scripts/sidescroll_shadow.gd" id="3_shadow"]
+[ext_resource type="Script" path="res://scripts/sidescroll_plate.gd" id="4_plate"]
+[ext_resource type="Script" path="res://scripts/sidescroll_door.gd" id="5_door"]
+[ext_resource type="Script" path="res://scripts/exit_zone.gd" id="6_exit"]
+[ext_resource type="PackedScene" path="res://scenes/HUD.tscn" id="7_hud"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_player"]
+size = Vector2(24, 34)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_plate"]
+size = Vector2(48, 12)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_door"]
+size = Vector2(16, 80)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ground"]
+size = Vector2(960, 60)
+
+[node name="SideScrollDemo" type="Node2D"]
+script = ExtResource("1_demo")
+
+[node name="WorldGeometry" type="StaticBody2D" parent="."]
+
+[node name="GroundShape" type="CollisionShape2D" parent="WorldGeometry"]
+position = Vector2(480, 580)
+shape = SubResource("RectangleShape2D_ground")
+
+[node name="GroundVisual" type="ColorRect" parent="WorldGeometry"]
+offset_top = 550.0
+offset_right = 960.0
+offset_bottom = 640.0
+color = Color(0.05, 0.08, 0.14, 1)
+
+[node name="GroundBorder" type="ColorRect" parent="WorldGeometry"]
+offset_top = 550.0
+offset_right = 960.0
+offset_bottom = 552.0
+color = Color(0, 0.9, 1, 0.7)
+
+[node name="Platform1" type="StaticBody2D" parent="."]
+position = Vector2(200, 460)
+
+[node name="Shape" type="CollisionPolygon2D" parent="Platform1"]
+polygon = PackedVector2Array(-60, 0, 60, 0, 60, 14, -60, 14)
+
+[node name="Visual" type="ColorRect" parent="Platform1"]
+offset_left = -60.0
+offset_right = 60.0
+offset_bottom = 14.0
+color = Color(0.08, 0.12, 0.2, 1)
+
+[node name="Border" type="ColorRect" parent="Platform1"]
+offset_left = -60.0
+offset_right = 60.0
+offset_bottom = 2.0
+color = Color(0, 0.9, 1, 0.7)
+
+[node name="Platform2" type="StaticBody2D" parent="."]
+position = Vector2(340, 370)
+
+[node name="Shape" type="CollisionPolygon2D" parent="Platform2"]
+polygon = PackedVector2Array(-60, 0, 60, 0, 60, 14, -60, 14)
+
+[node name="Visual" type="ColorRect" parent="Platform2"]
+offset_left = -60.0
+offset_right = 60.0
+offset_bottom = 14.0
+color = Color(0.08, 0.12, 0.2, 1)
+
+[node name="Border" type="ColorRect" parent="Platform2"]
+offset_left = -60.0
+offset_right = 60.0
+offset_bottom = 2.0
+color = Color(0, 0.9, 1, 0.7)
+
+[node name="SidescrollPlayer" type="CharacterBody2D" parent="."]
+position = Vector2(80, 520)
+script = ExtResource("2_player")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SidescrollPlayer"]
+shape = SubResource("RectangleShape2D_player")
+
+[node name="SidescrollShadow" type="Node2D" parent="."]
+position = Vector2(80, 520)
+script = ExtResource("3_shadow")
+
+[node name="Plate1" type="Area2D" parent="."]
+position = Vector2(340, 366)
+script = ExtResource("4_plate")
+linked_door_path = NodePath("../Door1")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Plate1"]
+shape = SubResource("RectangleShape2D_plate")
+
+[node name="Plate2" type="Area2D" parent="."]
+position = Vector2(180, 546)
+script = ExtResource("4_plate")
+linked_door_path = NodePath("../Door2")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Plate2"]
+shape = SubResource("RectangleShape2D_plate")
+
+[node name="Door1" type="StaticBody2D" parent="."]
+position = Vector2(510, 510)
+script = ExtResource("5_door")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Door1"]
+shape = SubResource("RectangleShape2D_door")
+
+[node name="Door2" type="StaticBody2D" parent="."]
+position = Vector2(720, 510)
+script = ExtResource("5_door")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Door2"]
+shape = SubResource("RectangleShape2D_door")
+
+[node name="ExitZone" type="Node2D" parent="."]
+position = Vector2(860, 510)
+script = ExtResource("6_exit")
+
+[node name="HUD" parent="." instance=ExtResource("7_hud")]

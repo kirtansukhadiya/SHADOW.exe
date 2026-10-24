@@ -1,6 +1,9 @@
 ## Shadow entity for SHADOW.exe.
-## Replays the player's recorded path either forward or in reverse (Shadow Flip).
-## Stays on its destination tile to hold pressure plates until flipped or reset.
+## Features a spectral glitch-ghost visual style:
+## - Chromatic aberration with micro-jitter
+## - Horizontal digital scanlines across the phantom shell
+## - Directional reversal chevron indicators (<< or >>)
+## - Temporal ripple rings and glitch fragment trail
 extends Node2D
 
 ## The shadow's current cell on the grid.
@@ -27,7 +30,7 @@ var replay_speed: float = 0.2
 ## Internal countdown until the next step.
 var replay_timer: float = 0.0
 
-## Ring buffer of the last 3 positions (used for trailing glow).
+## Ring buffer of the last 4 positions for trailing glow.
 var _trail: Array[Vector2i] = []
 
 ## Active tween reference.
@@ -35,6 +38,9 @@ var _tween: Tween = null
 
 ## Flip flash timer for visual pulse.
 var _flip_flash: float = 0.0
+
+var _time_alive: float = 0.0
+var _jitter_offset: Vector2 = Vector2.ZERO
 
 # ── Signals ──────────────────────────────────────────────────────────────────
 
@@ -51,9 +57,18 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	_time_alive += delta
+
+	# Subtle random glitch jitter every few frames
+	if randf() < 0.2:
+		_jitter_offset = Vector2(randf_range(-1.5, 1.5), randf_range(-1.5, 1.5))
+	else:
+		_jitter_offset = Vector2.ZERO
+
 	if _flip_flash > 0.0:
 		_flip_flash -= delta
-		queue_redraw()
+
+	queue_redraw()
 
 	if not is_replaying:
 		return
@@ -105,28 +120,24 @@ func start_replay(positions: Array[Vector2i], start_in_reverse: bool = false) ->
 
 	is_replaying = true
 	replay_timer = 0.05
-	_flip_flash = 0.3
+	_flip_flash = 0.35
 	stepped_on.emit(grid_pos)
-	queue_redraw()
 
 
 ## Flip shadow direction on the fly (Shadow Flip).
-## If moving forward, it starts moving backward. If stopped, it retraces.
 func flip() -> void:
 	if replay_positions.is_empty() and not visible:
 		return
 
 	is_reversed = !is_reversed
-	_flip_flash = 0.4
+	_flip_flash = 0.45
 
 	if is_replaying:
-		# Re-target index in reverse direction
 		if is_reversed:
 			replay_index = clampi(replay_index - 2, -1, replay_positions.size() - 1)
 		else:
 			replay_index = clampi(replay_index + 2, 0, replay_positions.size())
 	else:
-		# Was idle/stopped; resume in new direction
 		is_replaying = true
 		if is_reversed:
 			replay_index = clampi(replay_positions.size() - 2, -1, replay_positions.size() - 1)
@@ -136,7 +147,6 @@ func flip() -> void:
 
 	stepped_on.emit(grid_pos)
 	flipped.emit(is_reversed)
-	queue_redraw()
 
 
 ## Reset all replay state.
@@ -150,24 +160,24 @@ func reset() -> void:
 	visible = false
 	if _tween and _tween.is_running():
 		_tween.kill()
-	queue_redraw()
 
 
-# ── Drawing ──────────────────────────────────────────────────────────────────
+# ── Spectral Ghost Drawing ───────────────────────────────────────────────────
 
 func _draw() -> void:
 	if not visible:
 		return
 
+	var t := _time_alive
 	var is_flip := is_reversed
-	# Normal: Neon Red/Magenta. Flip: Electric Violet/Amber.
-	var base_col := Color(1.0, 0.15, 0.5, 0.8) if not is_flip else Color(1.0, 0.55, 0.0, 0.9)
-	var glow_col := Color(1.0, 0.0, 0.4, 0.35) if not is_flip else Color(1.0, 0.3, 0.8, 0.5)
+	var pulse := (sin(t * 6.0) + 1.0) / 2.0
 
-	if _flip_flash > 0.0:
-		glow_col = Color(1.0, 1.0, 1.0, 0.7)
+	# Palette
+	var main_col := Color(1.0, 0.1, 0.4, 0.85) if not is_flip else Color(1.0, 0.55, 0.05, 0.9)
+	var glow_col := Color(1.0, 0.0, 0.3, 0.25) if not is_flip else Color(1.0, 0.2, 0.8, 0.4)
+	var trail_col := Color(1.0, 0.2, 0.4) if not is_flip else Color(1.0, 0.6, 0.1)
 
-	# ── Trail ──
+	# 1. Glitch Particle / Footprint Trail
 	for i in range(_trail.size()):
 		var t_pos: Vector2i = _trail[i]
 		var world := Vector2(
@@ -175,40 +185,74 @@ func _draw() -> void:
 			t_pos.y * TILE_SIZE + TILE_SIZE / 2,
 		)
 		var local := world - position
-		var alpha := 0.15 + 0.12 * float(i)
-		var trail_col := Color(1.0, 0.2, 0.4, alpha) if not is_flip else Color(1.0, 0.6, 0.1, alpha)
-		draw_circle(local, 12.0, trail_col)
+		var alpha := 0.08 + 0.09 * float(i)
+		var r := 9.0 + float(i) * 1.5
+		draw_rect(Rect2(local - Vector2(r, r) * 0.5, Vector2(r, r)), Color(trail_col.r, trail_col.g, trail_col.b, alpha), false, 1.5)
 
-	# ── Diamond body ──
-	var half := 20.0
-	var glow_half := half + (6.0 if _flip_flash > 0.0 else 3.5)
+	# 2. Expanding Temporal Ripple (When Flipped)
+	if is_flip:
+		var ripple_r := 18.0 + pulse * 14.0
+		var ripple_alpha := (1.0 - pulse) * 0.6
+		draw_arc(Vector2.ZERO, ripple_r, 0.0, TAU, 24, Color(1.0, 0.6, 0.1, ripple_alpha), 1.5)
 
-	var glow_pts := PackedVector2Array([
-		Vector2(0, -glow_half),
-		Vector2(glow_half, 0),
-		Vector2(0, glow_half),
-		Vector2(-glow_half, 0),
+	# 3. Chromatic Aberration Shadow Layers (Glitch Offset)
+	var half := 19.0
+	var offset_pts := PackedVector2Array([
+		Vector2(0, -half) + _jitter_offset,
+		Vector2(half, 0) + _jitter_offset,
+		Vector2(0, half) + _jitter_offset,
+		Vector2(-half, 0) + _jitter_offset,
 	])
-	draw_colored_polygon(glow_pts, glow_col)
-
-	var pts := PackedVector2Array([
-		Vector2(0, -half),
-		Vector2(half, 0),
-		Vector2(0, half),
-		Vector2(-half, 0),
+	# Cyan ghost chromatic split
+	var split_offset := Vector2(2.0, 0) if not is_flip else Vector2(-2.5, 0)
+	var split_pts := PackedVector2Array([
+		offset_pts[0] + split_offset,
+		offset_pts[1] + split_offset,
+		offset_pts[2] + split_offset,
+		offset_pts[3] + split_offset,
 	])
-	draw_colored_polygon(pts, base_col)
+	draw_colored_polygon(split_pts, Color(0.0, 0.8, 1.0, 0.25))
 
-	# Inner core
-	var inner := half * 0.4
-	var inner_pts := PackedVector2Array([
-		Vector2(0, -inner),
-		Vector2(inner, 0),
-		Vector2(0, inner),
-		Vector2(-inner, 0),
+	# Main spectral body
+	draw_colored_polygon(offset_pts, main_col)
+
+	# Outer glowing aura
+	var aura_half := half + 4.0 + (pulse * 2.5)
+	var aura_pts := PackedVector2Array([
+		Vector2(0, -aura_half),
+		Vector2(aura_half, 0),
+		Vector2(0, aura_half),
+		Vector2(-aura_half, 0),
 	])
-	var inner_col := Color(1.0, 0.8, 0.9, 0.9) if not is_flip else Color(1.0, 0.95, 0.7, 0.95)
-	draw_colored_polygon(inner_pts, inner_col)
+	draw_colored_polygon(aura_pts, glow_col)
+
+	# 4. Horizontal Digital Scanlines
+	for y_step in range(-14, 15, 4):
+		var y_val := float(y_step)
+		var span := (half - absf(y_val)) * 0.85
+		if span > 2.0:
+			draw_line(
+				Vector2(-span, y_val) + _jitter_offset,
+				Vector2(span, y_val) + _jitter_offset,
+				Color(1.0, 1.0, 1.0, 0.35),
+				1.0
+			)
+
+	# 5. Core Spectral Eye / Inversion Chevron
+	if is_flip:
+		# Draw Reversal Chevron (<<)
+		draw_line(Vector2(4, -6), Vector2(-3, 0), Color(1.0, 1.0, 0.8, 0.95), 2.5)
+		draw_line(Vector2(-3, 0), Vector2(4, 6), Color(1.0, 1.0, 0.8, 0.95), 2.5)
+	else:
+		# Spectral Core Diamond
+		var eye_half := half * 0.35
+		var eye_pts := PackedVector2Array([
+			Vector2(0, -eye_half) + _jitter_offset,
+			Vector2(eye_half, 0) + _jitter_offset,
+			Vector2(0, eye_half) + _jitter_offset,
+			Vector2(-eye_half, 0) + _jitter_offset,
+		])
+		draw_colored_polygon(eye_pts, Color(1.0, 0.9, 0.95, 0.9))
 
 
 # ── Internal ─────────────────────────────────────────────────────────────────

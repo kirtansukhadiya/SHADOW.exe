@@ -1,0 +1,242 @@
+[gd_scene load_steps=16 format=3]
+
+[ext_resource type="Script" path="res://scripts/sidescroll_level1.gd" id="1_level"]
+[ext_resource type="Script" path="res://scripts/sidescroll_player.gd" id="2_player"]
+[ext_resource type="Script" path="res://scripts/sidescroll_shadow.gd" id="3_shadow"]
+[ext_resource type="Script" path="res://scripts/sidescroll_plate.gd" id="4_plate"]
+[ext_resource type="Script" path="res://scripts/sidescroll_door.gd" id="5_door"]
+[ext_resource type="Script" path="res://scripts/exit_zone.gd" id="6_exit"]
+[ext_resource type="PackedScene" path="res://scenes/HUD.tscn" id="7_hud"]
+[ext_resource type="Script" path="res://scripts/story_terminal.gd" id="8_term"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_term"]
+size = Vector2(36, 40)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ground_left"]
+size = Vector2(180, 90)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ground_right"]
+size = Vector2(420, 90)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_player"]
+size = Vector2(24, 34)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_plate"]
+size = Vector2(48, 12)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_door"]
+size = Vector2(18, 120)
+
+[node name="SideLevel1" type="Node2D"]
+script = ExtResource("1_level")
+
+[node name="WorldGeometry" type="StaticBody2D" parent="."]
+
+[node name="LeftGroundShape" type="CollisionShape2D" parent="WorldGeometry"]
+position = Vector2(90, 595)
+shape = SubResource("RectangleShape2D_ground_left")
+
+[node name="LeftGroundVisual" type="ColorRect" parent="WorldGeometry"]
+offset_top = 550.0
+offset_right = 180.0
+offset_bottom = 640.0
+color = Color(0.04, 0.07, 0.12, 1)
+
+[node name="LeftGroundBorder" type="ColorRect" parent="WorldGeometry"]
+offset_top = 550.0
+offset_right = 180.0
+offset_bottom = 552.0
+color = Color(0, 0.9, 1, 0.7)
+
+[node name="RightGroundShape" type="CollisionShape2D" parent="WorldGeometry"]
+position = Vector2(750, 595)
+shape = SubResource("RectangleShape2D_ground_right")
+
+[node name="RightGroundVisual" type="ColorRect" parent="WorldGeometry"]
+offset_left = 540.0
+offset_top = 550.0
+offset_right = 960.0
+offset_bottom = 640.0
+color = Color(0.04, 0.07, 0.12, 1)
+
+[node name="RightGroundBorder" type="ColorRect" parent="WorldGeometry"]
+offset_left = 540.0
+offset_top = 550.0
+offset_right = 960.0
+offset_bottom = 552.0
+color = Color(0, 0.9, 1, 0.7)
+
+[node name="AirlockRoof" type="CollisionPolygon2D" parent="WorldGeometry"]
+polygon = PackedVector2Array(550, 0, 750, 0, 750, 430, 550, 430)
+
+[node name="AirlockRoofVisual" type="ColorRect" parent="WorldGeometry"]
+offset_left = 550.0
+offset_right = 750.0
+offset_bottom = 430.0
+color = Color(0.05, 0.08, 0.14, 1)
+
+[node name="AirlockBorderL" type="ColorRect" parent="WorldGeometry"]
+offset_left = 549.0
+offset_right = 551.0
+offset_bottom = 430.0
+color = Color(0, 0.9, 1, 0.6)
+
+[node name="AirlockBorderR" type="ColorRect" parent="WorldGeometry"]
+offset_left = 749.0
+offset_right = 751.0
+offset_bottom = 430.0
+color = Color(0, 0.9, 1, 0.6)
+
+[node name="Pillar1" type="StaticBody2D" parent="."]
+position = Vector2(250, 480)
+
+[node name="Shape" type="CollisionPolygon2D" parent="Pillar1"]
+polygon = PackedVector2Array(-45, 0, 45, 0, 45, 160, -45, 160)
+
+[node name="Visual" type="ColorRect" parent="Pillar1"]
+offset_left = -45.0
+offset_right = 45.0
+offset_bottom = 160.0
+color = Color(0.06, 0.1, 0.16, 1)
+
+[node name="BorderTop" type="ColorRect" parent="Pillar1"]
+offset_left = -45.0
+offset_right = 45.0
+offset_bottom = 2.0
+color = Color(0, 0.9, 1, 0.8)
+
+[node name="BorderL" type="ColorRect" parent="Pillar1"]
+offset_left = -45.0
+offset_right = -43.0
+offset_bottom = 160.0
+color = Color(0, 0.9, 1, 0.3)
+
+[node name="BorderR" type="ColorRect" parent="Pillar1"]
+offset_left = 43.0
+offset_right = 45.0
+offset_bottom = 160.0
+color = Color(0, 0.9, 1, 0.3)
+
+[node name="Pillar2" type="StaticBody2D" parent="."]
+position = Vector2(370, 400)
+
+[node name="Shape" type="CollisionPolygon2D" parent="Pillar2"]
+polygon = PackedVector2Array(-55, 0, 55, 0, 55, 240, -55, 240)
+
+[node name="Visual" type="ColorRect" parent="Pillar2"]
+offset_left = -55.0
+offset_right = 55.0
+offset_bottom = 240.0
+color = Color(0.06, 0.1, 0.16, 1)
+
+[node name="BorderTop" type="ColorRect" parent="Pillar2"]
+offset_left = -55.0
+offset_right = 55.0
+offset_bottom = 2.0
+color = Color(0, 0.9, 1, 0.8)
+
+[node name="BorderL" type="ColorRect" parent="Pillar2"]
+offset_left = -55.0
+offset_right = -53.0
+offset_bottom = 240.0
+color = Color(0, 0.9, 1, 0.3)
+
+[node name="BorderR" type="ColorRect" parent="Pillar2"]
+offset_left = 53.0
+offset_right = 55.0
+offset_bottom = 240.0
+color = Color(0, 0.9, 1, 0.3)
+
+[node name="Pillar3" type="StaticBody2D" parent="."]
+position = Vector2(490, 480)
+
+[node name="Shape" type="CollisionPolygon2D" parent="Pillar3"]
+polygon = PackedVector2Array(-40, 0, 40, 0, 40, 160, -40, 160)
+
+[node name="Visual" type="ColorRect" parent="Pillar3"]
+offset_left = -40.0
+offset_right = 40.0
+offset_bottom = 160.0
+color = Color(0.06, 0.1, 0.16, 1)
+
+[node name="BorderTop" type="ColorRect" parent="Pillar3"]
+offset_left = -40.0
+offset_right = 40.0
+offset_bottom = 2.0
+color = Color(0, 0.9, 1, 0.8)
+
+[node name="BorderL" type="ColorRect" parent="Pillar3"]
+offset_left = -40.0
+offset_right = -38.0
+offset_bottom = 160.0
+color = Color(0, 0.9, 1, 0.3)
+
+[node name="BorderR" type="ColorRect" parent="Pillar3"]
+offset_left = 38.0
+offset_right = 40.0
+offset_bottom = 160.0
+color = Color(0, 0.9, 1, 0.3)
+
+[node name="SidescrollPlayer" type="CharacterBody2D" parent="."]
+position = Vector2(70, 520)
+script = ExtResource("2_player")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SidescrollPlayer"]
+shape = SubResource("RectangleShape2D_player")
+
+[node name="SidescrollShadow" type="Node2D" parent="."]
+position = Vector2(70, 520)
+script = ExtResource("3_shadow")
+
+[node name="Plate1" type="Area2D" parent="."]
+position = Vector2(370, 396)
+script = ExtResource("4_plate")
+linked_door_path = NodePath("../Door1")
+release_delay = 0.5
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Plate1"]
+shape = SubResource("RectangleShape2D_plate")
+
+[node name="Plate2" type="Area2D" parent="."]
+position = Vector2(110, 546)
+script = ExtResource("4_plate")
+linked_door_path = NodePath("../Door2")
+release_delay = 0.5
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Plate2"]
+shape = SubResource("RectangleShape2D_plate")
+
+[node name="Door1" type="StaticBody2D" parent="."]
+position = Vector2(560, 490)
+script = ExtResource("5_door")
+door_height = 120.0
+door_width = 18.0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Door1"]
+shape = SubResource("RectangleShape2D_door")
+
+[node name="Door2" type="StaticBody2D" parent="."]
+position = Vector2(740, 490)
+script = ExtResource("5_door")
+door_height = 120.0
+door_width = 18.0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Door2"]
+shape = SubResource("RectangleShape2D_door")
+
+[node name="ExitZone" type="Node2D" parent="."]
+position = Vector2(850, 500)
+script = ExtResource("6_exit")
+
+[node name="StoryTerminal" type="Area2D" parent="."]
+position = Vector2(150, 550)
+script = ExtResource("8_term")
+story_text = "ARCHIVE 01: SUBJECT AWAKENED IN CORRUPTED SECTOR 1.
+FALLING INTO THE VOID WILL RESTART YOUR SEQUENCE.
+COOPERATE WITH YOUR PAST: DEPLOY [SPACE] FOR DOOR 1, THEN FLIP [F] FOR DOOR 2!"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StoryTerminal"]
+position = Vector2(0, -20)
+shape = SubResource("RectangleShape2D_term")
+
+[node name="HUD" parent="." instance=ExtResource("7_hud")]

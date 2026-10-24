@@ -79,6 +79,16 @@ func play_victory() -> void:
 		p.play()
 
 
+func play_death() -> void:
+	if sfx_flip:
+		var p := _get_player()
+		p.stream = sfx_flip
+		p.volume_db = -2.0
+		p.pitch_scale = 0.5
+		p.play()
+		get_tree().create_timer(0.4).timeout.connect(func(): p.pitch_scale = 1.0)
+
+
 # ── Sound Generation ────────────────────────────────────────────────────────
 
 func _create_wav(samples: PackedByteArray, sample_rate: int = 22050) -> AudioStreamWAV:

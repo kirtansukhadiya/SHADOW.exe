@@ -5,8 +5,15 @@ extends Node
 ## Index of the currently active level (0-based).
 var current_level: int = 0
 
-## Ordered list of level scene paths.
+## Ordered list of level scene paths (Side-Scrolling Main Campaign).
 var level_scenes: Array[String] = [
+	"res://scenes/sidescroll/SideLevel1.tscn",
+	"res://scenes/sidescroll/SideLevel2.tscn",
+	"res://scenes/sidescroll/SideLevel3.tscn",
+]
+
+## Top-down levels preserved in archive.
+var topdown_scenes: Array[String] = [
 	"res://scenes/levels/Level1.tscn",
 	"res://scenes/levels/Level2.tscn",
 	"res://scenes/levels/Level3.tscn",

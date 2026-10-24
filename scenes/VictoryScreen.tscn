@@ -45,16 +45,23 @@ horizontal_alignment = 1
 
 [node name="Line1Label" type="Label" parent="VBoxContainer"]
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 18
-text = "The shadow was you all along."
+theme_override_colors/font_color = Color(1, 0.65, 0.1, 1)
+theme_override_font_sizes/font_size = 20
+text = "IDENTITY VERIFIED: YOU ARE THE ECHO."
 horizontal_alignment = 1
 
 [node name="Line2Label" type="Label" parent="VBoxContainer"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 0.7)
-theme_override_font_sizes/font_size = 14
-text = "You cooperated with your past to escape."
+theme_override_colors/font_color = Color(1, 1, 1, 0.9)
+theme_override_font_sizes/font_size = 15
+text = "The red shadow was the original, preserved after system reset."
+horizontal_alignment = 1
+
+[node name="Line3Label" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.85, 1, 0.7)
+theme_override_font_sizes/font_size = 13
+text = "By cooperating with your past, the recursive cycle has shattered."
 horizontal_alignment = 1
 
 [node name="Spacer" type="Control" parent="VBoxContainer"]
