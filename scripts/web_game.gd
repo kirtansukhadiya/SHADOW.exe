@@ -18,6 +18,11 @@ const SPEED := 240.0
 const JUMP_POWER := -490.0
 const PLAYER_W := 24.0
 const PLAYER_H := 34.0
+# Collision half-widths. The web build used 12 (walls) and 9 (floors), which
+# is wider than the 20px void gaps: the player could never drop in and instead
+# stood on a 1px pillar corner. Narrower boxes let the player fall off edges.
+const HIT_HW_WALL := 9.0
+const HIT_HW_FLOOR := 6.0
 
 enum State { MENU, PLAYING, VICTORY }
 
@@ -502,7 +507,7 @@ func _all_solids() -> Array[Rect2]:
 
 
 func _resolve_x(e: Dictionary) -> void:
-	var hw := PLAYER_W / 2.0
+	var hw := HIT_HW_WALL
 	var hh := PLAYER_H / 2.0
 	for b in _all_solids():
 		var p_left: float = e.x - hw
@@ -519,11 +524,11 @@ func _resolve_x(e: Dictionary) -> void:
 
 
 func _resolve_y(e: Dictionary) -> void:
-	var hw := PLAYER_W / 2.0
+	var hw := HIT_HW_FLOOR
 	var hh := PLAYER_H / 2.0
 	for b in _all_solids():
-		var p_left: float = e.x - hw + 3.0
-		var p_right: float = e.x + hw - 3.0
+		var p_left: float = e.x - hw
+		var p_right: float = e.x + hw
 		var p_top: float = e.y - hh
 		var p_bottom: float = e.y + hh
 		if p_right > b.position.x and p_left < b.end.x and p_bottom > b.position.y and p_top < b.end.y:
