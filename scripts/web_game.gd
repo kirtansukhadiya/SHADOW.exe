@@ -8,13 +8,12 @@ const UI := preload("res://scripts/ui_style.gd")
 const WebWorld := preload("res://scripts/web_world.gd")
 const TerminalModal := preload("res://scripts/terminal_modal.gd")
 const WebAudio := preload("res://scripts/web_audio.gd")
-# Animation frames per sprite row (0 player, 1 echo shadow, 2 reversed shadow).
-# The combined spritesheet.png is misaligned and clips the characters, so the
-# individual 64x64 frames are used instead.
-const FRAME_SETS := ["player", "ghost", "ghost_reverse"]
-# Each 64px frame is drawn into the same box as the web build's 32px cell
-# (32px in levels, 48px on title cards), keeping the small web-sized character.
-const FRAME_PAD_SCALE := 1.0
+# Cubit: the player is a hovering cube that tumbles as it moves. The echo
+# and reversed shadow are Cubits too, in their own colours.
+const CUBIT_FILL := Color("#0d1f38")
+const ECHO_FILL := Color("#24140a")
+const REVERSED_FILL := Color("#1c0a2a")
+const CUBIT_ROLL_SPEED := 6.0  # radians per second while moving
 
 # --- GAME CONSTANTS (same as web) ---
 const CANVAS_W := 960.0
@@ -110,17 +109,15 @@ var _sound_btn: Button
 var _brand: Control
 var _shake_off := Vector2.ZERO
 var _bg_tex: GradientTexture2D
-var _frames: Array = []  # [row][frame] -> Texture2D
+var _cube_outer := PackedVector2Array()
+var _cube_inner := PackedVector2Array()
 
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	for set_name in FRAME_SETS:
-		var row: Array[Texture2D] = []
-		for f in 8:
-			row.append(load("res://assets/art/%s_%d.png" % [set_name, f]))
-		_frames.append(row)
+	_cube_outer = _rounded_square(8.0, 2.5)
+	_cube_inner = _rounded_square(5.0, 1.5)
 	_audio = WebAudio.new()
 	add_child(_audio)
 	_build_page()
@@ -341,13 +338,13 @@ func load_level(idx: int) -> void:
 	exit_pos = Vector2(data.exit[0], data.exit[1])
 	exit_rot = 0.0
 	player = {"x": float(data.spawn[0]), "y": float(data.spawn[1]), "vx": 0.0, "vy": 0.0, "on_ground": false,
-		"facing": 1.0, "anim_timer": 0.0, "anim_frame": 0, "is_dead": false}
+		"facing": 1.0, "roll": 0.0, "cube_ang": 0.0, "is_dead": false}
 	history.clear()
 	recording = true
 	coyote_timer = 0.0
 	jump_buffer_timer = 0.0
 	shadow = {"active": false, "history": [], "index": 0, "playback_dir": 1, "x": 0.0, "y": 0.0,
-		"facing": 1.0, "anim_frame": 0, "is_reversed": false}
+		"facing": 1.0, "cube_ang": 0.0, "is_reversed": false}
 	complete = false
 
 	# Update top navigation badges
@@ -381,10 +378,10 @@ func _update(dt: float) -> void:
 	player.vy += GRAVITY * dt
 	if move_dir != 0.0:
 		player.facing = move_dir
-		player.anim_timer += dt * 10.0
-		player.anim_frame = int(player.anim_timer) % 8
-	else:
-		player.anim_frame = 0
+	# Cubit tumbles in the direction of travel and settles flat when idle.
+	player.roll += move_dir * CUBIT_ROLL_SPEED * dt
+	var roll_target: float = player.roll if move_dir != 0.0 else snappedf(player.roll, PI / 2.0)
+	player.cube_ang = lerpf(player.cube_ang, roll_target, 1.0 - exp(-dt * 18.0))
 
 	# Coyote time & jump buffering
 	coyote_timer = 0.14 if player.on_ground else maxf(0.0, coyote_timer - dt)
@@ -406,7 +403,7 @@ func _update(dt: float) -> void:
 	_resolve_y(player)
 
 	if recording:
-		history.append({"x": player.x, "y": player.y, "facing": player.facing, "anim_frame": player.anim_frame})
+		history.append({"x": player.x, "y": player.y, "facing": player.facing, "cube_ang": player.cube_ang})
 
 	# Void fall death check
 	if player.y > 615.0 and not player.is_dead:
@@ -508,7 +505,7 @@ func _update_shadow() -> void:
 	shadow.x = frame.x
 	shadow.y = frame.y
 	shadow.facing = -frame.facing if shadow.playback_dir == -1 else frame.facing
-	shadow.anim_frame = frame.anim_frame
+	shadow.cube_ang = frame.cube_ang  # replayed backwards after a flip, so it rolls in reverse
 	if randf() < 0.4:
 		_add_particle(shadow.x + (randf() - 0.5) * 10.0, shadow.y + (randf() - 0.5) * 16.0,
 			-shadow.facing * 10.0, -15.0, UI.VIOLET if shadow.is_reversed else UI.ORANGE, 2.5, 0.4)
@@ -623,11 +620,42 @@ func _text(s: String, x: float, y: float, font: Font, sz: int, color: Color, ali
 	_canvas.draw_string(font, pos, s, HORIZONTAL_ALIGNMENT_LEFT, -1, sz, color)
 
 
-func _sprite(row: int, frame: int, pos: Vector2, facing: float, draw_size: float = 32.0) -> void:
-	_canvas.draw_set_transform(_shake_off + pos, 0.0, Vector2(signf(facing) if facing != 0.0 else 1.0, 1.0))
-	var h := draw_size * FRAME_PAD_SCALE / 2.0
-	_canvas.draw_texture_rect(_frames[row][frame], Rect2(-h, -h, h * 2.0, h * 2.0), false)
-	_canvas.draw_set_transform(_shake_off)
+## Draws a Cubit in the 32px character box centred on `pos` (feet at +16).
+## `s` scales the whole character (2.0 on the title cards).
+func _draw_cubit(pos: Vector2, ang: float, facing: float, s: float, outline: Color, fill: Color, t: float) -> void:
+	var c := _canvas
+	# Soft floor shadow
+	c.draw_set_transform(_shake_off + pos + Vector2(0, 15.0 * s), 0.0, Vector2(1.0, 0.22))
+	c.draw_circle(Vector2.ZERO, 7.0 * s, Color(outline, 0.12))
+	# Hovering, tumbling body
+	var center := pos + Vector2(0, (4.0 + sin(t * 3.0) * 1.4) * s)
+	c.draw_set_transform(_shake_off)
+	_glow(center, 17.0 * s, outline, 0.35)
+	c.draw_set_transform(_shake_off + center, ang, Vector2(s, s))
+	c.draw_colored_polygon(_cube_outer, fill)
+	c.draw_polyline(_cube_outer, Color(outline, 0.3), 4.0)
+	c.draw_polyline(_cube_outer, outline, 1.5)
+	c.draw_polyline(_cube_inner, Color(outline, 0.35), 1.0)
+	# Eyes stay upright and look the way the Cubit is facing
+	c.draw_set_transform(_shake_off + center, 0.0, Vector2(s * (1.0 if facing >= 0.0 else -1.0), s))
+	c.draw_rect(Rect2(-0.5, -4, 4, 5.5), Color(outline, 0.25))
+	c.draw_rect(Rect2(3, -4, 4, 5.5), Color(outline, 0.25))
+	c.draw_rect(Rect2(0.5, -3, 2, 3.5), outline)
+	c.draw_rect(Rect2(4, -3, 2, 3.5), outline)
+	c.draw_set_transform(_shake_off)
+
+
+## Closed outline of a rounded square (half-size `h`, corner radius `r`).
+func _rounded_square(h: float, r: float) -> PackedVector2Array:
+	var pts := PackedVector2Array()
+	var corners := [Vector2(h - r, -h + r), Vector2(h - r, h - r), Vector2(-h + r, h - r), Vector2(-h + r, -h + r)]
+	var start_angles := [-PI / 2.0, 0.0, PI / 2.0, PI]
+	for i in 4:
+		for k in 5:
+			var a: float = start_angles[i] + (PI / 2.0) * k / 4.0
+			pts.append(corners[i] + Vector2(cos(a), sin(a)) * r)
+	pts.append(pts[0])
+	return pts
 
 
 func _glow(pos: Vector2, radius: float, color: Color, alpha: float = 0.45) -> void:
@@ -636,6 +664,7 @@ func _glow(pos: Vector2, radius: float, color: Color, alpha: float = 0.45) -> vo
 
 func _draw_level() -> void:
 	var c := _canvas
+	var now := Time.get_ticks_msec() / 1000.0
 	# 1. Background cyber grid
 	c.draw_rect(Rect2(0, 0, CANVAS_W, CANVAS_H), Color("#03070d"))
 	var grid := Color(0, 240 / 255.0, 1, 0.04)
@@ -700,15 +729,15 @@ func _draw_level() -> void:
 	if shadow.active:
 		var s_pos := Vector2(shadow.x, shadow.y)
 		var s_col := UI.VIOLET if shadow.is_reversed else UI.ORANGE
-		_glow(s_pos, 22.0, s_col, 0.4)
-		_sprite(2 if shadow.is_reversed else 1, shadow.anim_frame, s_pos, shadow.facing)
+		_draw_cubit(s_pos, shadow.cube_ang, shadow.facing, 1.0, s_col,
+			REVERSED_FILL if shadow.is_reversed else ECHO_FILL, now)
 		_text("<< REVERSED SHADOW" if shadow.is_reversed else "ECHO SHADOW >>", shadow.x, shadow.y - 24, UI.mono(), 10, s_col, 1)
 
 	# 8. Player
 	if not player.is_dead:
 		var p_pos := Vector2(player.x, player.y)
-		_glow(p_pos, 18.0, UI.CYAN, 0.2)
-		_sprite(0, player.anim_frame, p_pos, player.facing)
+		var wobble := sin(now * 1.5) * 0.15 if player.vx == 0.0 else 0.0
+		_draw_cubit(p_pos, player.cube_ang + wobble, player.facing, 1.0, UI.CYAN, CUBIT_FILL, now)
 
 	# 9. Particles (web advances them by a fixed 0.016 per draw)
 	for i in range(particles.size() - 1, -1, -1):
@@ -797,10 +826,10 @@ func _draw_menu(time: float) -> void:
 func _draw_card(x: float, y: float, w: float, h: float, color: Color, tag: String, title: String, row: int, time: float) -> void:
 	_canvas.draw_rect(Rect2(x, y, w, h), UI.MODAL_BG)
 	_canvas.draw_rect(Rect2(x, y, w, h), color, false, 1.5)
-	var frame := int(time * 6.0) % 8
-	var center := Vector2(x + w / 2.0, y + 55)
-	_glow(center, 30.0, color, 0.35)
-	_sprite(row, frame, center, 1.0, 48.0)
+	# Player idles; the echo tumbles forward; the reversed shadow tumbles backward.
+	var ang: float = [sin(time * 1.5) * 0.15, time * 2.0, -time * 2.0][row]
+	var fill: Color = [CUBIT_FILL, ECHO_FILL, REVERSED_FILL][row]
+	_draw_cubit(Vector2(x + w / 2.0, y + 40), ang, 1.0, 2.0, color, fill, time)
 	_text(tag, x + w / 2.0, y + 105, UI.mono(), 10, color, 1)
 	_text(title, x + w / 2.0, y + 124, UI.orbitron(800), 12, Color.WHITE, 1)
 
