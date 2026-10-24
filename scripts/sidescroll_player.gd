@@ -114,6 +114,7 @@ func _draw() -> void:
 		return
 	var moving := absf(velocity.x) > 1.0
 	var frame_idx: int = int(_anim_timer) % _anim_frames.size() if moving else 0
-	draw_set_transform(Vector2.ZERO, 0.0, Vector2(facing * 0.7, 0.7))
-	draw_texture(_anim_frames[frame_idx], -_anim_frames[frame_idx].get_size() * 0.5)
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2(signf(facing) if facing != 0.0 else 1.0, 1.0))
+	var src := Rect2(frame_idx * 32.0, 0.0, 32.0, 32.0)
+	draw_texture_rect_region(preload("res://assets/art/spritesheet.png"), Rect2(-16, -16, 32, 32), src)
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)

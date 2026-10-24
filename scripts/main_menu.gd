@@ -55,7 +55,7 @@ func _ready() -> void:
 
 	_centered_label("PRESS [SPACE] OR CLICK BELOW TO INITIALIZE", UI.orbitron(600), 18, Color.WHITE, 430)
 
-	_add_button("▶ START CAMPAIGN (PHASE 1)", UI.CYAN, 460, 44, _on_start_pressed)
+	_add_button("▶ START CAMPAIGN (LEVEL 1)", UI.CYAN, 460, 44, _on_start_pressed)
 	_add_button("📖 TUTORIAL PROTOCOL", UI.ORANGE, 515, 38, _on_tutorial_pressed)
 	_add_button("⚡ STORY ARCHIVES & MANUAL", UI.TEXT_MUTED, 565, 38, _on_manual_pressed)
 
@@ -115,7 +115,8 @@ func _draw() -> void:
 		# Soft colored aura behind the sprite (stands in for canvas shadowBlur).
 		for r in [30.0, 22.0, 15.0]:
 			draw_circle(center, r, Color(c[0], 0.07))
-		draw_texture_rect(_frames[c[3]][frame], Rect2(center - Vector2(32, 32), Vector2(64, 64)), false)
+		var src := Rect2(frame * 32.0, c[3] * 32.0, 32.0, 32.0)
+		draw_texture_rect_region(preload("res://assets/art/spritesheet.png"), Rect2(center - Vector2(24, 24), Vector2(48, 48)), src)
 
 
 func _card_x(i: int) -> float:

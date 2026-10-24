@@ -11,6 +11,7 @@ var pause_tree: bool = false
 
 var _title: Label
 var _body: Label
+var _btn: Button
 var _open: bool = false
 
 
@@ -67,14 +68,14 @@ func _ready() -> void:
 	btn_gap.custom_minimum_size = Vector2(0, 20)
 	vb.add_child(btn_gap)
 
-	var btn := Button.new()
-	btn.text = "ACKNOWLEDGE [SPACE / ENTER]"
-	btn.size_flags_horizontal = Control.SIZE_SHRINK_END
-	btn.add_theme_font_override("font", UI.orbitron(800))
-	btn.add_theme_font_size_override("font_size", 13)
-	btn.add_theme_color_override("font_color", UI.CYAN)
-	btn.add_theme_color_override("font_hover_color", UI.BG)
-	btn.add_theme_color_override("font_pressed_color", UI.BG)
+	_btn = Button.new()
+	_btn.text = "ACKNOWLEDGE [SPACE / ENTER]"
+	_btn.size_flags_horizontal = Control.SIZE_SHRINK_END
+	_btn.add_theme_font_override("font", UI.orbitron(800))
+	_btn.add_theme_font_size_override("font_size", 13)
+	_btn.add_theme_color_override("font_color", UI.CYAN)
+	_btn.add_theme_color_override("font_hover_color", UI.BG)
+	_btn.add_theme_color_override("font_pressed_color", UI.BG)
 	var normal := UI.box(Color(UI.CYAN, 0.15), UI.CYAN, 1, 3)
 	normal.content_margin_left = 24
 	normal.content_margin_right = 24
@@ -84,23 +85,25 @@ func _ready() -> void:
 	hover.bg_color = UI.CYAN
 	hover.shadow_color = Color(UI.CYAN, 0.8)
 	hover.shadow_size = 10
-	btn.add_theme_stylebox_override("normal", normal)
-	btn.add_theme_stylebox_override("hover", hover)
-	btn.add_theme_stylebox_override("pressed", hover)
-	btn.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
-	btn.focus_mode = Control.FOCUS_NONE
-	btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	btn.pressed.connect(close)
-	vb.add_child(btn)
+	_btn.add_theme_stylebox_override("normal", normal)
+	_btn.add_theme_stylebox_override("hover", hover)
+	_btn.add_theme_stylebox_override("pressed", hover)
+	_btn.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+	_btn.focus_mode = Control.FOCUS_NONE
+	_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	_btn.pressed.connect(close)
+	vb.add_child(_btn)
 
 
 func is_open() -> bool:
 	return _open
 
 
-func open(title: String, text: String) -> void:
+func open(title: String, text: String, button_text: String = "ACKNOWLEDGE [SPACE / ENTER]") -> void:
 	_title.text = title
 	_body.text = text
+	if _btn:
+		_btn.text = button_text
 	_open = true
 	visible = true
 	if pause_tree:
@@ -125,6 +128,7 @@ func _input(event: InputEvent) -> void:
 	if not _open:
 		return
 	if event is InputEventKey and event.pressed and not event.echo:
-		if event.keycode in [KEY_SPACE, KEY_ENTER, KEY_KP_ENTER, KEY_ESCAPE]:
+		var code: Key = event.physical_keycode if event.physical_keycode != KEY_NONE else event.keycode
+		if code in [KEY_SPACE, KEY_ENTER, KEY_KP_ENTER, KEY_ESCAPE] or event.keycode in [KEY_SPACE, KEY_ENTER, KEY_KP_ENTER, KEY_ESCAPE]:
 			get_viewport().set_input_as_handled()
 			close()

@@ -570,7 +570,7 @@ const LEVELS = [
     exit: { x: 850, y: 510 }
   },
 
-  // LEVEL 1: PHASE 1 - DISCOVERY (THE ECHO)
+  // LEVEL 1 - DISCOVERY (THE ECHO)
   // Puzzle: Gap Void hazard! Player jumps across 3 pillars to Door 1.
   // Plate 1 is on Pillar 2 at (370, 396) -> Opens Door 1.
   // Plate 2 is back at Start on Ground Left at (110, 546) -> Opens Door 2.
@@ -578,7 +578,7 @@ const LEVELS = [
   // Then presses [F] (Shadow Flip)! Shadow reverses backwards all the way to Start,
   // stepping on Plate 2 to open Door 2!
   {
-    name: 'PHASE 1 - DISCOVERY',
+    name: 'LEVEL 1 - DISCOVERY',
     phase: 'THE ECHO',
     subtitle: 'ECHO DETECTED. REVERSE SYNCHRONIZATION ACTIVE.',
     spawn: { x: 70, y: 520 },
@@ -609,9 +609,9 @@ const LEVELS = [
     exit: { x: 850, y: 500 }
   },
 
-  // LEVEL 2: PHASE 2 - DOUBT (THE OPPOSITE)
+  // LEVEL 2 - DOUBT (THE OPPOSITE)
   {
-    name: 'PHASE 2 - DOUBT',
+    name: 'LEVEL 2 - DOUBT',
     phase: 'THE OPPOSITE',
     subtitle: 'WARNING: ORIGINAL SIGNAL NOT FOUND.',
     spawn: { x: 70, y: 520 },
@@ -639,11 +639,11 @@ const LEVELS = [
     exit: { x: 870, y: 510 }
   },
 
-  // LEVEL 3: PHASE 3 - REVELATION (THE ORIGINAL)
+  // LEVEL 3 - REVELATION (THE ORIGINAL)
   // Triple airlock: Plate 1 (160, 546) links to BOTH Door 1 and Door 3!
   // Plate 2 (320, 356) links to Door 2!
   {
-    name: 'PHASE 3 - REVELATION',
+    name: 'LEVEL 3 - REVELATION',
     phase: 'THE ORIGINAL',
     subtitle: 'IDENTITY ERROR: YOU ARE THE ECHO.',
     spawn: { x: 70, y: 520 },
@@ -1363,12 +1363,6 @@ class LevelRunner {
     ctx.font = '12px "Share Tech Mono"';
     ctx.fillText(statusText, 24, 70);
 
-    // Quick Action Helper Bar (Upper Right)
-    ctx.textAlign = 'right';
-    ctx.fillStyle = '#c0dff8';
-    ctx.font = '11px "Share Tech Mono"';
-    ctx.fillText('[W] JUMP   [SPACE] DEPLOY   [F] FLIP   [R] RESET', CANVAS_W - 24, 32);
-
     // Red Death Flash Overlay
     if (this.player.isDead) {
       ctx.fillStyle = `rgba(255, 30, 60, ${deathTransition * 0.7})`;
@@ -1387,7 +1381,25 @@ class LevelRunner {
 // Active Level Runner
 let activeRunner = null;
 
-function loadLevel(idx) {
+function showLevelInstructions(data) {
+  const instructions =
+    `OPERATIONAL INSTRUCTIONS & CONTROLS:\n\n` +
+    `  • [W] / [↑]          JUMP across platforms & void\n` +
+    `  • [SPACE]            DEPLOY SHADOW (clone replays past recorded path)\n` +
+    `  • [F]                FLIP (REVERSES time! Rewinds shadow backward)\n` +
+    `  • [R]                RESET timeline sequence\n` +
+    `  • [A] / [D] / [←][→]  MOVE / SPRINT left and right\n\n` +
+    `MISSION OBJECTIVE:\n` +
+    `Cooperate with your time-reversed shadow to press plates, open security blast doors, and reach the Extraction Portal.`;
+
+  openModal(
+    'PROTOCOL BRIEFING // CONTROLS & OBJECTIVE',
+    instructions,
+    'START GAME [SPACE / ENTER]'
+  );
+}
+
+function loadLevel(idx, showBriefing = false) {
   currentLevelIndex = idx;
   const data = LEVELS[idx];
   activeRunner = new LevelRunner(data);
@@ -1400,11 +1412,16 @@ function loadLevel(idx) {
   bannerText = data.name;
   bannerSub = data.subtitle;
   bannerTimer = 2.5;
+
+  // Instructions ONLY appear before Level 1
+  if (showBriefing && idx === 1 && gameState === STATE.PLAYING) {
+    showLevelInstructions(data);
+  }
 }
 
 function nextLevel() {
   if (currentLevelIndex < LEVELS.length - 1) {
-    loadLevel(currentLevelIndex + 1);
+    loadLevel(currentLevelIndex + 1, false);
   } else {
     // Campaign complete -> Victory Screen
     gameState = STATE.VICTORY;
@@ -1415,7 +1432,7 @@ function nextLevel() {
 
 function restartLevel() {
   if (activeRunner) {
-    loadLevel(currentLevelIndex);
+    loadLevel(currentLevelIndex, false);
   }
 }
 
@@ -1471,7 +1488,7 @@ function drawMenu(ctx, time) {
   ctx.fillText('PRESS [SPACE] OR CLICK BELOW TO INITIALIZE', CANVAS_W / 2, 430);
 
   // Interactive Button Rects
-  drawMenuButton(ctx, CANVAS_W / 2 - 160, 460, 320, 44, '▶ START CAMPAIGN (PHASE 1)', '#00f0ff');
+  drawMenuButton(ctx, CANVAS_W / 2 - 160, 460, 320, 44, '▶ START CAMPAIGN (LEVEL 1)', '#00f0ff');
   drawMenuButton(ctx, CANVAS_W / 2 - 160, 515, 320, 38, '📖 TUTORIAL PROTOCOL', '#ff7700');
   drawMenuButton(ctx, CANVAS_W / 2 - 160, 565, 320, 38, '⚡ STORY ARCHIVES & MANUAL', '#8bb3cb');
 }
@@ -1547,14 +1564,21 @@ const modalTitle = document.getElementById('modal-title');
 const modalText = document.getElementById('modal-text');
 const modalCloseBtn = document.getElementById('modal-close-btn');
 
-function openModal(title, text) {
+function openModal(title, text, btnText = 'ACKNOWLEDGE [SPACE / ENTER]') {
   modalTitle.innerText = title;
   modalText.innerText = text;
+  modalCloseBtn.innerText = btnText;
   modalOverlay.style.display = 'flex';
 }
 
 function closeModal() {
   modalOverlay.style.display = 'none';
+  keys.left = false;
+  keys.right = false;
+  keys.jump = false;
+  keys.deploy = false;
+  keys.flip = false;
+  keys.interact = false;
 }
 
 modalCloseBtn.addEventListener('click', closeModal);
@@ -1574,7 +1598,7 @@ window.addEventListener('keydown', (e) => {
   if (gameState === STATE.MENU) {
     if (e.code === 'Space' || e.code === 'Enter') {
       gameState = STATE.PLAYING;
-      loadLevel(1);
+      loadLevel(1, true);
     }
     return;
   }
@@ -1662,7 +1686,7 @@ canvas.addEventListener('click', (e) => {
     // Start Campaign button
     if (clickX >= CANVAS_W / 2 - 160 && clickX <= CANVAS_W / 2 + 160 && clickY >= 460 && clickY <= 504) {
       gameState = STATE.PLAYING;
-      loadLevel(1);
+      loadLevel(1, true);
     }
     // Tutorial button
     else if (clickX >= CANVAS_W / 2 - 160 && clickX <= CANVAS_W / 2 + 160 && clickY >= 515 && clickY <= 553) {
@@ -1740,16 +1764,18 @@ function gameLoop(now) {
 
   if (gameState === STATE.PLAYING) {
     if (activeRunner) {
-      activeRunner.update(dt);
-      activeRunner.draw(ctx);
+      if (modalOverlay.style.display !== 'flex') {
+        activeRunner.update(dt);
 
-      // Death transition timer
-      if (activeRunner.player.isDead) {
-        deathTransition -= dt;
-        if (deathTransition <= 0) {
-          restartLevel();
+        // Death transition timer
+        if (activeRunner.player.isDead) {
+          deathTransition -= dt;
+          if (deathTransition <= 0) {
+            restartLevel();
+          }
         }
       }
+      activeRunner.draw(ctx);
     }
   } else if (gameState === STATE.MENU) {
     drawMenu(ctx, timeSec);

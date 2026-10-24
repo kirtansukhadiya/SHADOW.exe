@@ -118,13 +118,12 @@ func _draw() -> void:
 	var col := _color()
 	WebWorld.draw_glow(self, Vector2.ZERO, 22.0, Color(col, 0.4))
 
-	var frames := _frames_reverse if is_reversed else _frames_forward
-	if not frames.is_empty():
-		var frame_idx: int = int(_time_alive * 10.0) % frames.size() if _moving else 0
-		var tex := frames[frame_idx]
-		draw_set_transform(Vector2.ZERO, 0.0, Vector2(_facing * 0.7, 0.7))
-		draw_texture(tex, -tex.get_size() * 0.5)
-		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	var row := 2.0 if is_reversed else 1.0
+	var frame_idx: int = int(_time_alive * 10.0) % 8 if _moving else 0
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2(signf(_facing) if _facing != 0.0 else 1.0, 1.0))
+	var src := Rect2(frame_idx * 32.0, row * 32.0, 32.0, 32.0)
+	draw_texture_rect_region(preload("res://assets/art/spritesheet.png"), Rect2(-16, -16, 32, 32), src)
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 	# Name tag
 	var tag := "<< REVERSED SHADOW" if is_reversed else "ECHO SHADOW >>"

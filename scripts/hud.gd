@@ -34,13 +34,6 @@ func _ready() -> void:
 	_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	root.add_child(_status_label)
 
-	# Top-right quick action helper
-	var helper := UI.label("[W] JUMP   [SPACE] DEPLOY   [F] FLIP   [R] RESET", UI.mono(), 11, UI.TEXT_HINT)
-	helper.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	helper.position = Vector2(960 - 24 - 440, 32 - UI.mono().get_ascent(11))
-	helper.size = Vector2(440, 0)
-	root.add_child(helper)
-
 	root.add_child(_build_key_legend())
 
 	# Centered message toast (modal-box look)

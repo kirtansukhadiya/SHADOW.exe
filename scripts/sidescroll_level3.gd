@@ -1,4 +1,4 @@
-## Phase 3 — REVELATION: The Original
+## Level 3 — REVELATION: The Original
 ## The final chamber uses the shadow mechanic, but its conclusion reveals that
 ## the player is the future projection and the shadow is the original!
 extends "res://scripts/sidescroll_level_base.gd"
@@ -6,7 +6,7 @@ extends "res://scripts/sidescroll_level_base.gd"
 var _revelation_shown: bool = false
 
 func _ready() -> void:
-	level_phase_name = "PHASE 3 — REVELATION // THE ORIGINAL"
+	level_phase_name = "LEVEL 3 — REVELATION // THE ORIGINAL"
 	level_subtitle = "IDENTITY ERROR: YOU ARE THE ECHO."
 	level_hint = "Route Plate 1 -> Plate 2. Pass Doors 1 & 2, then execute SHADOW FLIP [F] for the System Core!"
 	super._ready()

@@ -8,6 +8,7 @@ const UI := preload("res://scripts/ui_style.gd")
 const WebWorld := preload("res://scripts/web_world.gd")
 const TerminalModal := preload("res://scripts/terminal_modal.gd")
 const WebAudio := preload("res://scripts/web_audio.gd")
+const SPRITESHEET := preload("res://assets/art/spritesheet.png")
 # Animation frames per sprite row (0 player, 1 echo shadow, 2 reversed shadow).
 # The combined spritesheet.png is misaligned and clips the characters, so the
 # individual 64x64 frames are used instead.
@@ -62,9 +63,9 @@ const LEVELS := [
 		},
 		"exit": [850, 510],
 	},
-	# LEVEL 1: PHASE 1 - DISCOVERY (THE ECHO)
+	# LEVEL 1: DISCOVERY (THE ECHO)
 	{
-		"name": "PHASE 1 - DISCOVERY",
+		"name": "LEVEL 1 - DISCOVERY",
 		"phase": "THE ECHO",
 		"subtitle": "ECHO DETECTED. REVERSE SYNCHRONIZATION ACTIVE.",
 		"spawn": [70, 520],
@@ -91,9 +92,9 @@ const LEVELS := [
 		},
 		"exit": [850, 500],
 	},
-	# LEVEL 2: PHASE 2 - DOUBT (THE OPPOSITE)
+	# LEVEL 2: DOUBT (THE OPPOSITE)
 	{
-		"name": "PHASE 2 - DOUBT",
+		"name": "LEVEL 2 - DOUBT",
 		"phase": "THE OPPOSITE",
 		"subtitle": "WARNING: ORIGINAL SIGNAL NOT FOUND.",
 		"spawn": [70, 520],
@@ -119,9 +120,9 @@ const LEVELS := [
 		},
 		"exit": [870, 510],
 	},
-	# LEVEL 3: PHASE 3 - REVELATION (THE ORIGINAL)
+	# LEVEL 3: REVELATION (THE ORIGINAL)
 	{
-		"name": "PHASE 3 - REVELATION",
+		"name": "LEVEL 3 - REVELATION",
 		"phase": "THE ORIGINAL",
 		"subtitle": "IDENTITY ERROR: YOU ARE THE ECHO.",
 		"spawn": [70, 520],
@@ -360,6 +361,14 @@ void fragment() {
 	_canvas.add_child(crt)
 
 	_modal = TerminalModal.new()
+	_modal.closed.connect(func():
+		keys.left = false
+		keys.right = false
+		keys.jump = false
+		keys.deploy = false
+		keys.flip = false
+		keys.interact = false
+	)
 	_canvas.add_child(_modal)
 	return frame
 
@@ -397,7 +406,22 @@ func _build_bottom_bar() -> Control:
 
 # ═══════════════════════════════ LEVEL RUNNER ═══════════════════════════════
 
-func load_level(idx: int) -> void:
+func show_level_instructions(_lvl: Dictionary) -> void:
+	var title: String = "PROTOCOL BRIEFING // CONTROLS & OBJECTIVE"
+	var body: String = (
+		"OPERATIONAL INSTRUCTIONS & CONTROLS:\n\n" +
+		"  • [W] / [↑]          JUMP across platforms & void\n" +
+		"  • [SPACE]            DEPLOY SHADOW (clone replays past recorded path)\n" +
+		"  • [F]                FLIP (REVERSES time! Rewinds shadow backward)\n" +
+		"  • [R]                RESET timeline sequence\n" +
+		"  • [A] / [D] / [←][→]  MOVE / SPRINT left and right\n\n" +
+		"MISSION OBJECTIVE:\n" +
+		"Cooperate with your time-reversed shadow to press plates, open security blast doors, and reach the Extraction Portal."
+	)
+	_modal.open(title, body, "START GAME [SPACE / ENTER]")
+
+
+func load_level(idx: int, show_briefing: bool = false) -> void:
 	current_level_index = idx
 	data = LEVELS[idx]
 	solids.clear()
@@ -433,17 +457,21 @@ func load_level(idx: int) -> void:
 	_level_badge.text = data.name
 	_phase_badge.text = data.phase
 
+	# Instructions ONLY appear before Level 1
+	if show_briefing and idx == 1 and game_state == State.PLAYING:
+		show_level_instructions(data)
+
 
 func next_level() -> void:
 	if current_level_index < LEVELS.size() - 1:
-		load_level(current_level_index + 1)
+		load_level(current_level_index + 1, false)
 	else:
 		game_state = State.VICTORY
 		_audio.play("victory")
 
 
 func restart_level() -> void:
-	load_level(current_level_index)
+	load_level(current_level_index, false)
 
 
 func _update(dt: float) -> void:
@@ -671,11 +699,12 @@ func _process(delta: float) -> void:
 		screen_shake = maxf(0.0, screen_shake - dt * 25.0)
 
 	if game_state == State.PLAYING:
-		_update(dt)
-		if player.is_dead:
-			death_transition -= dt
-			if death_transition <= 0.0:
-				restart_level()
+		if not _modal.is_open():
+			_update(dt)
+			if player.is_dead:
+				death_transition -= dt
+				if death_transition <= 0.0:
+					restart_level()
 	_canvas.queue_redraw()
 	_brand.queue_redraw()
 
@@ -704,8 +733,10 @@ func _text(s: String, x: float, y: float, font: Font, sz: int, color: Color, ali
 
 func _sprite(row: int, frame: int, pos: Vector2, facing: float, draw_size: float = 32.0) -> void:
 	_canvas.draw_set_transform(_shake_off + pos, 0.0, Vector2(signf(facing) if facing != 0.0 else 1.0, 1.0))
-	var h := draw_size * FRAME_PAD_SCALE / 2.0
-	_canvas.draw_texture_rect(_frames[row][frame], Rect2(-h, -h, h * 2.0, h * 2.0), false)
+	var h := draw_size / 2.0
+	var src := Rect2(frame * 32.0, row * 32.0, 32.0, 32.0)
+	var dst := Rect2(-h, -h, draw_size, draw_size)
+	_canvas.draw_texture_rect_region(SPRITESHEET, dst, src)
 	_canvas.draw_set_transform(_shake_off)
 
 
@@ -814,7 +845,6 @@ func _draw_level() -> void:
 			status_text = "STATUS: SHADOW REPLAYING [>>]"
 			status_color = UI.ORANGE
 	_text(status_text, 24, 70, UI.mono(), 12, status_color)
-	_text("[W] JUMP   [SPACE] DEPLOY   [F] FLIP   [R] RESET", CANVAS_W - 24, 32, UI.mono(), 11, UI.TEXT_HINT, 2)
 
 	# Red death flash overlay
 	if player.is_dead:
@@ -869,7 +899,7 @@ func _draw_menu(time: float) -> void:
 	_draw_card(CANVAS_W / 2.0 + 140, card_y, 240, 150, UI.VIOLET, "REVERSED SIGNAL", "SHADOW FLIP", 2, time)
 
 	_text("PRESS [SPACE] OR CLICK BELOW TO INITIALIZE", CANVAS_W / 2.0, 430, UI.orbitron(600), 18, Color.WHITE, 1)
-	_draw_menu_button(CANVAS_W / 2.0 - 160, 460, 320, 44, "▶ START CAMPAIGN (PHASE 1)", UI.CYAN)
+	_draw_menu_button(CANVAS_W / 2.0 - 160, 460, 320, 44, "▶ START CAMPAIGN (LEVEL 1)", UI.CYAN)
 	_draw_menu_button(CANVAS_W / 2.0 - 160, 515, 320, 38, "📖 TUTORIAL PROTOCOL", UI.ORANGE)
 	_draw_menu_button(CANVAS_W / 2.0 - 160, 565, 320, 38, "⚡ STORY ARCHIVES & MANUAL", UI.TEXT_MUTED)
 
@@ -911,13 +941,12 @@ func _input(event: InputEvent) -> void:
 		return
 	var code: Key = event.physical_keycode
 	if event.pressed:
-		# (The modal closes itself on SPACE / ENTER / ESC before this runs.)
-		if _modal.is_open() and code in [KEY_SPACE, KEY_ENTER, KEY_ESCAPE]:
+		if _modal.is_open():
 			return
 		if game_state == State.MENU:
 			if code == KEY_SPACE or code == KEY_ENTER:
 				game_state = State.PLAYING
-				load_level(1)
+				load_level(1, true)
 			return
 		if game_state == State.VICTORY:
 			if code in [KEY_SPACE, KEY_ENTER, KEY_ESCAPE]:
@@ -953,10 +982,10 @@ func _on_canvas_input(event: InputEvent) -> void:
 	if game_state == State.MENU:
 		if in_x and p.y >= 460 and p.y <= 504:
 			game_state = State.PLAYING
-			load_level(1)
+			load_level(1, true)
 		elif in_x and p.y >= 515 and p.y <= 553:
 			game_state = State.PLAYING
-			load_level(0)
+			load_level(0, false)
 		elif in_x and p.y >= 565 and p.y <= 603:
 			_modal.open(MANUAL_TITLE, MANUAL_TEXT)
 	elif game_state == State.VICTORY:

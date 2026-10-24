@@ -5,7 +5,7 @@ extends Node2D
 
 const WebWorld := preload("res://scripts/web_world.gd")
 
-@export var level_phase_name: String = "PHASE 1 - DISCOVERY"
+@export var level_phase_name: String = "LEVEL 1 - DISCOVERY"
 @export var level_subtitle: String = "ECHO DETECTED. REVERSE SYNCHRONIZATION ACTIVE."
 @export var level_hint: String = "Jump [W] to plate -> return below. Deploy [SPACE], then proceed."
 
