@@ -8,7 +8,13 @@ const UI := preload("res://scripts/ui_style.gd")
 const WebWorld := preload("res://scripts/web_world.gd")
 const TerminalModal := preload("res://scripts/terminal_modal.gd")
 const WebAudio := preload("res://scripts/web_audio.gd")
-const SPRITESHEET := preload("res://assets/art/spritesheet.png")
+# Animation frames per sprite row (0 player, 1 echo shadow, 2 reversed shadow).
+# The combined spritesheet.png is misaligned and clips the characters, so the
+# individual 64x64 frames are used instead.
+const FRAME_SETS := ["player", "ghost", "ghost_reverse"]
+# The 64px frames have transparent padding; scale up so the character fills
+# the same area the 32px spritesheet cell was meant to.
+const FRAME_PAD_SCALE := 1.4
 
 # --- GAME CONSTANTS (same as web) ---
 const CANVAS_W := 960.0
@@ -183,11 +189,17 @@ var _sound_btn: Button
 var _brand: Control
 var _shake_off := Vector2.ZERO
 var _bg_tex: GradientTexture2D
+var _frames: Array = []  # [row][frame] -> Texture2D
 
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for set_name in FRAME_SETS:
+		var row: Array[Texture2D] = []
+		for f in 8:
+			row.append(load("res://assets/art/%s_%d.png" % [set_name, f]))
+		_frames.append(row)
 	_audio = WebAudio.new()
 	add_child(_audio)
 	_build_page()
@@ -692,8 +704,8 @@ func _text(s: String, x: float, y: float, font: Font, sz: int, color: Color, ali
 
 func _sprite(row: int, frame: int, pos: Vector2, facing: float, draw_size: float = 32.0) -> void:
 	_canvas.draw_set_transform(_shake_off + pos, 0.0, Vector2(signf(facing) if facing != 0.0 else 1.0, 1.0))
-	var h := draw_size / 2.0
-	_canvas.draw_texture_rect_region(SPRITESHEET, Rect2(-h, -h, draw_size, draw_size), Rect2(frame * 32, row * 32, 32, 32))
+	var h := draw_size * FRAME_PAD_SCALE / 2.0
+	_canvas.draw_texture_rect(_frames[row][frame], Rect2(-h, -h, h * 2.0, h * 2.0), false)
 	_canvas.draw_set_transform(_shake_off)
 
 
@@ -851,9 +863,10 @@ func _draw_menu(time: float) -> void:
 	_text("HACKATHON THEME REQUIREMENT: REVERSAL PROTOCOL", CANVAS_W / 2.0, 180, UI.mono(), 13, Color(UI.CYAN, 0.7), 1)
 
 	var card_y := 220.0
-	_draw_card(CANVAS_W / 2.0 - 270, card_y, 240, 150, UI.CYAN, "CYBER PROJECTION", "PLAYER", 0, time)
+	# Three 240px cards with 20px gaps, centred (the web build overlapped the first two).
+	_draw_card(CANVAS_W / 2.0 - 380, card_y, 240, 150, UI.CYAN, "CYBER PROJECTION", "PLAYER", 0, time)
 	_draw_card(CANVAS_W / 2.0 - 120, card_y, 240, 150, UI.ORANGE, "PAST RECORDING", "ECHO CLONE", 1, time)
-	_draw_card(CANVAS_W / 2.0 + 150, card_y, 240, 150, UI.VIOLET, "REVERSED SIGNAL", "SHADOW FLIP", 2, time)
+	_draw_card(CANVAS_W / 2.0 + 140, card_y, 240, 150, UI.VIOLET, "REVERSED SIGNAL", "SHADOW FLIP", 2, time)
 
 	_text("PRESS [SPACE] OR CLICK BELOW TO INITIALIZE", CANVAS_W / 2.0, 430, UI.orbitron(600), 18, Color.WHITE, 1)
 	_draw_menu_button(CANVAS_W / 2.0 - 160, 460, 320, 44, "▶ START CAMPAIGN (PHASE 1)", UI.CYAN)
